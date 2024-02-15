@@ -24,6 +24,39 @@ servers:
     description: "Production server"
 
 paths:
+  /auth/token:
+    post:
+      summary: "Get JWT token"
+      description: |
+        Returns a JWT token for the given credentials.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "user"
+                password:
+                  type: string
+                  example: "pass"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1Ni"
+        400:
+          $ref: "#/components/responses/ErrorResponse"
+        401:
+          $ref: "#/components/responses/ErrorResponse"
+
   /contact:
     #    $ref: "./paths/contacts.yaml"
     get:
