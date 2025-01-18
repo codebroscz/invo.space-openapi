@@ -14,13 +14,13 @@ info:
     * date-time is in ISO 
     * errors follow https://datatracker.ietf.org/doc/html/rfc7807
 
-  version: "1.0.0"
+  version: "2.0.0"
   title: "invo.space"
   contact:
     email: "bros@codebros.cz"
 
 servers:
-  - url: "https://invo.space/api/v1"
+  - url: "https://invo.space/api/v2"
     description: "Production server"
 
 paths:
@@ -49,15 +49,22 @@ paths:
               schema:
                 type: object
                 properties:
+                  id:
+                    type: string
+                    example: "1"
                   token:
                     type: string
                     example: "eyJhbGciOiJIUzI1Ni"
+                  expires:
+                    type: string
+                    format: date-time
+                    example: "2023-03-01T00:00:00Z"
         400:
           $ref: "#/components/responses/ErrorResponse"
         401:
           $ref: "#/components/responses/ErrorResponse"
 
-  /contact:
+  /contacts:
     #    $ref: "./paths/contacts.yaml"
     get:
       tags:
@@ -94,7 +101,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /contact/{id}:
+  /contacts/{id}:
     get:
       tags:
         - contacts
@@ -125,7 +132,7 @@ paths:
                         description: Internal ID of the Contact.
                         example: 37
 
-  /expense:
+  /expenses:
     #    $ref: "./paths/expenses.yaml"
     get:
       tags:
@@ -178,7 +185,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /expense/{id}:
+  /expenses/{id}:
     get:
       tags:
         - expenses
@@ -208,7 +215,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /invoice:
+  /invoices:
 #    $ref: "./paths/invoices.yaml"
     get:
       tags:
@@ -261,7 +268,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /invoice/{id}:
+  /invoices/{id}:
     get:
       tags:
         - invoices
@@ -291,7 +298,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /order:
+  /orders:
     #    $ref: "./paths/orders.yaml"
     get:
       tags:
@@ -343,7 +350,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /order/{id}:
+  /orders/{id}:
     get:
       tags:
         - orders
