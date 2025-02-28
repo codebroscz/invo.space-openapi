@@ -607,6 +607,47 @@ components:
           allOf:
             - $ref: "#/components/schemas/Money"
 
+    DocumentItem_Create:
+      type: object
+      required:
+        - amount
+        - unit
+        - description
+        - unitPrice
+      properties:
+        amount:
+          type: number
+          format: float
+          description: Quantity of the item
+        unit:
+          type: string
+          description: Unit of the item
+          example:
+            - h
+            - MD
+            - x
+            - ks
+        description:
+          type: string
+          description: Description of the item
+        unitPrice:
+          description: Price of a single unit of the item.
+          allOf: # todo this nest is a hack for openapi 3.0, see https://github.com/OAI/OpenAPI-Specification/issues/1514#issuecomment-1386613645
+            - $ref: "#/components/schemas/Money"
+        taxRate:
+          type: integer
+          description: Tax rate applied on the item. Required for VAT payer.
+        computation:
+          type: string
+          enum:
+            - bottomUp
+            - topDown
+          description: |
+            Method of computation of the price including tax. Default value is `bottomUp`.
+            `bottomUp` means that the price is provided as base and tax is added to it.
+            `topDown` means that the price is provided as total and tax is deducted from it.
+            Value is irrelevant for non-VAT payers.
+
     Expense:
       allOf:
         - $ref: '#/components/schemas/Document'
@@ -769,7 +810,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/DocumentItem'
+            $ref: '#/components/schemas/DocumentItem_Create'
           minItems: 1
 
     DocumentIdentificationResponse:

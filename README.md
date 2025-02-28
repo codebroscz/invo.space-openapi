@@ -7,3 +7,4 @@
 - removed field `status` from `CreateDocumentResponse` schema snippet
 - `CreateDocumentResponse` schema snippet renamed to `DocumentIdentificationResponse`
 - added `PATCH` and `PUT` methods to `/invoices/{id}` endpoint
+- request schema for creating DocumentItems is simplified
