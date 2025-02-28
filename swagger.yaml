@@ -445,6 +445,24 @@ components:
           format: date-time
           nullable: true
           description: Date of payment that appears on the document
+        status:
+          type: string
+          enum:
+            - issued
+            - sent
+            - paid
+            - overdue
+            - cancelled
+          description: |
+            Initial status of the document is `issued`.
+            
+            | Status | Description |
+            | ------ | ----------- |
+            | `issued` | document was created and is waiting for payment |
+            | `sent` | document was sent to the customer |
+            | `paid` | document was paid |
+            | `overdue` | document is not paid and is past the deadline |
+            | `cancelled` | document was cancelled |
         description:
           type: string
           nullable: true
