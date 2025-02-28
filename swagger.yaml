@@ -892,7 +892,7 @@ components:
           type: array
           description: Items will be replaced as a whole.
           items:
-            $ref: '#/components/schemas/DocumentItem'
+            $ref: '#/components/schemas/DocumentItem_Create'
           minItems: 1
 
     PatchDocumentResponse:
