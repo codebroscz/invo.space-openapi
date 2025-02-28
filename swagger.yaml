@@ -181,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateDocumentResponse'
+                $ref: '#/components/schemas/DocumentIdentificationResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -264,7 +264,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateDocumentResponse'
+                $ref: '#/components/schemas/DocumentIdentificationResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -295,6 +295,52 @@ paths:
                         format: url
                         description: Permanent link leading to PDF version of the Invoice.
                         example: /permalink/invoice/9961d718-cae7-48e9-845d-e5c21f4ecdb3
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      tags:
+        - invoices
+      summary: Partially update Invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Identification of the Invoice. As of now it is symbol of the Invoice.
+      requestBody:
+        $ref: '#/components/requestBodies/PatchInvoice'
+      responses:
+        200:
+          description: Invoice was updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDocumentResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    put:
+      tags:
+        - invoices
+      summary: Update Invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Identification of the Invoice. As of now it is symbol of the Invoice.
+      requestBody:
+        $ref: '#/components/requestBodies/CreateInvoice'
+      responses:
+        200:
+          description: Invoice was updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentIdentificationResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -346,7 +392,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateDocumentResponse'
+                $ref: '#/components/schemas/DocumentIdentificationResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -722,12 +768,91 @@ components:
             $ref: '#/components/schemas/DocumentItem'
           minItems: 1
 
-    CreateDocumentResponse:
+    DocumentIdentificationResponse:
       type: object
       properties:
-        status:
+        id:
           type: string
-          description: Always 'ok'
+          description: Internal ID of the created Document. Currently it is sequence number of the Document.
+          example: 20230001
+        symbol:
+          type: string
+          description: Sequence number of the created Document.
+          example: 20230001
+        uuid:
+          type: string
+          format: uuid
+          description: UUID of the created Document.
+          example: 9961d718-cae7-48e9-845d-e5c21f4ecdb3
+        permalink:
+          type: string
+          format: url
+          description: Permanent link leading to PDF version of the Document.
+
+    PatchDocumentRequest:
+      type: object
+      properties:
+        customer:
+          anyOf:
+            - type: number
+              description: Internal ID of Customer
+            - $ref: '#/components/schemas/Participant'
+        beneficiary:
+          nullable: true
+          description: Beneficiary feature must be enabled for the account.
+          anyOf:
+            - type: number
+              description: Internal ID of customer
+            - $ref: '#/components/schemas/Participant'
+        issuedAt:
+          type: string
+          format: date-time
+          description: |
+            Date of issuance that appears on the document. 
+            May be provided in relative format, e.g. '+1 day'.
+            Current date if not provided.
+        paidAt:
+          nullable: true
+          type: string
+          format: date-time
+          description: |
+            Date of payment that appears on the document. 
+            May be provided in relative format, e.g. '+1 day'.  
+            Invoice will not be marked as paid if not provided or null.
+        deadlineAt:
+          type: string
+          format: date-time
+          description: |
+            Date until when one wants the payment to be made. 
+            May be provided in relative format, e.g. '+15 days'.
+        sentAt:
+          type: string
+          format: date-time
+          description: |
+            Date of document submission to the customer.
+            Setting this field influences whether the status of the document is `issued` or `sent` (if `paidAt` field is null and not past deadline).
+        description:
+          type: string
+          description: Line of text that appears above the list of document items.
+        vs:
+          type: string
+          description: Variable symbol
+        ss:
+          type: string
+          description: Specific symbol
+        ks:
+          type: string
+          description: Constant symbol
+        items:
+          type: array
+          description: Items will be replaced as a whole.
+          items:
+            $ref: '#/components/schemas/DocumentItem'
+          minItems: 1
+
+    PatchDocumentResponse:
+      type: object
+      properties:
         id:
           type: string
           description: Internal ID of the created Document. Currently it is sequence number of the Document.
@@ -849,6 +974,35 @@ components:
                       Hello,
                       
                       thank you for your order. Please see the attached order with payment information.
+
+    PatchInvoice:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PatchDocumentRequest'
+              - type: object
+                properties:
+                  order:
+                    type: string
+                    nullable: true
+                    description: Reference to Internal Order ID.
+                  taxableAt:
+                    nullable: true
+                    type: string
+                    format: date-time
+                    description: |
+                      Date of VAT applicability.
+                      May be provided in relative format, e.g. '+1 day'.
+                      Required for invoices created by VAT payers. Not allowed for non-VAT payers.
+
+    PatchOrder:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchDocumentRequest'
 
   responses:
     ErrorResponse:
