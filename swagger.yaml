@@ -308,7 +308,9 @@ paths:
           required: true
           schema:
             type: string
-            description: Identification of the Invoice. As of now it is symbol of the Invoice.
+            format: uuid
+            description: Identification of the Invoice is possible only via its UUID.
+            example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
       requestBody:
         $ref: '#/components/requestBodies/PatchInvoice'
       responses:
@@ -331,7 +333,9 @@ paths:
           required: true
           schema:
             type: string
-            description: Identification of the Invoice. As of now it is symbol of the Invoice.
+            format: uuid
+            description: Identification of the Invoice is possible only via its UUID.
+            example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
       requestBody:
         $ref: '#/components/requestBodies/CreateInvoice'
       responses:
