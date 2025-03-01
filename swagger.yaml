@@ -70,15 +70,25 @@ paths:
       tags:
         - contacts
       summary: "List Contacts"
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
       responses:
         200:
           description: "A list of Contacts."
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Participant"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Participant"
+                  total:
+                    type: integer
+                    description: Total number of Contacts
+                    example: 93
 
     post:
       tags:
@@ -141,31 +151,26 @@ paths:
       description: "Returns a list of Expenses for a given year and optionally for a given month."
       operationId: "getExpenses"
       parameters:
-        - in: query
-          name: year
-          schema:
-            type: integer
-            description: Year in four digit format YYYY
-            example: 2023
-          required: true
-        - in: query
-          name: month
-          schema:
-            type: integer
-            description: Month in non-zerofilled format
-            example:
-              - 3
-              - 12
-            nullable: true
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
       responses:
         200:
           description: "A list of Expenses."
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Expense"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Expense"
+                  total:
+                    type: integer
+                    description: Total number of Expenses
+                    example: 28
 
     post:
       tags:
@@ -224,31 +229,26 @@ paths:
       description: "Returns a list of Invoices for a given year and optionally for a given month."
       operationId: "getInvoices"
       parameters:
-        - in: query
-          name: year
-          schema:
-            type: integer
-            description: Year in four digit format YYYY
-            example: 2023
-          required: true
-        - in: query
-          name: month
-          schema:
-            type: integer
-            description: Month in non-zerofilled format
-            example:
-              - 3
-              - 12
-            nullable: true
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
       responses:
         200:
           description: "A list of Invoices."
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Invoice"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Invoice"
+                  total:
+                    type: integer
+                    description: Total number of Invoices
+                    example: 72
 
     post:
       tags:
@@ -357,31 +357,26 @@ paths:
       description: "Returns a list of Orders for a given year and optionally for a given month."
       operationId: "getOrders"
       parameters:
-        - in: query
-          name: year
-          schema:
-            type: integer
-            description: Year in four digit format YYYY
-            example: 2023
-          required: true
-        - in: query
-          name: month
-          schema:
-            type: integer
-            description: Month in non-zerofilled format
-            example:
-              - 3
-              - 12
-            nullable: true
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
       responses:
         200:
           description: "A list of Orders."
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Order"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+                  total:
+                    type: integer
+                    description: Total number of Orders
+                    example: 12
 
     post:
       tags:
@@ -915,6 +910,45 @@ components:
           type: string
           format: url
           description: Permanent link leading to PDF version of the Document.
+
+  parameters:
+    year:
+      name: year
+      in: query
+      required: false
+      schema:
+        type: integer
+        description: Year in four digit format YYYY
+        example: 2023
+    month:
+      name: month
+      in: query
+      required: false
+      schema:
+        type: integer
+        description: Month in non-zerofilled format
+        example:
+          - 3
+          - 12
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: null
+        description: Number of items to return
+        example: 10
+        nullable: true
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+        description: Number of items to skip
+        example: 10
 
   requestBodies:
     CreateExpense:
