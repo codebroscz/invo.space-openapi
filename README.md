@@ -2,6 +2,11 @@
 
 ## Changelog
 
+### 5.3.2025
+
+- Participant: add id field
+- `customer` and `beneficiary` fields require `string` rather than `number` for forward compatibility with KSUID
+
 ### 1.3.2025
 
 - endpoints returning collections now have `limit` and `offset` query parameters

@@ -712,6 +712,10 @@ components:
       required:
         - name
       properties:
+        id:
+          type: string
+          description: ID of the Participant in `part_<string>` KSUID format.
+          example: part_192
         name:
           type: string
           description: Full name of the participant
@@ -758,14 +762,14 @@ components:
           nullable: true
         customer:
           anyOf:
-            - type: number
+            - type: string
               description: Internal ID of Customer
             - $ref: '#/components/schemas/Participant'
         beneficiary:
           nullable: true
           description: Beneficiary feature must be enabled for the account.
           anyOf:
-            - type: number
+            - type: string
               description: Internal ID of customer
             - $ref: '#/components/schemas/Participant'
         issuedAt:
@@ -834,14 +838,14 @@ components:
       properties:
         customer:
           anyOf:
-            - type: number
+            - type: string
               description: Internal ID of Customer
             - $ref: '#/components/schemas/Participant'
         beneficiary:
           nullable: true
           description: Beneficiary feature must be enabled for the account.
           anyOf:
-            - type: number
+            - type: string
               description: Internal ID of customer
             - $ref: '#/components/schemas/Participant'
         issuedAt:
