@@ -425,6 +425,178 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /document-sequences:
+    get:
+      tags:
+        - document-sequences
+      summary: List Document sequences of given type
+      description: Returns a list of Document sequences of requested type for the authenticated user.
+      operationId: "getDocumentSequences"
+      parameters:
+        -
+          name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - invoice
+              - order
+              - expense
+
+      responses:
+        200:
+          description: "A list of Document sequences."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DocumentSequence"
+                  total:
+                    type: integer
+                    description: Total number of Document sequences
+                    example: 1
+    post:
+      tags:
+        - document-sequences
+      summary: Create new Document sequence
+      description: Returns a list of Document sequences for the authenticated user.
+      operationId: "createDocumentSequence"
+      responses:
+        200:
+          description: "Returns new Document sequence. Setting it as default will replace the current default."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentSequence"
+
+  /document-sequences/{id}:
+    get:
+      tags:
+        - document-sequences
+      summary: Get single Document sequence
+      description: Returns a Document sequence with requested ID.
+      operationId: "getDocumentSequence"
+      responses:
+        200:
+#          description: ""
+          content:
+            application/json:
+              $ref: "#/components/schemas/DocumentSequence"
+        404:
+          description: "Document sequence with requested ID was not found"
+          $ref: "#/components/responses/ErrorResponse"
+
+    post:
+      tags:
+        - document-sequences
+      summary: Update Document sequence
+      description: Updates a Document sequence with requested ID. Setting it as default will replace the current default.
+      operationId: "updateDocumentSequence"
+      responses:
+        200:
+          #          description: ""
+          content:
+            application/json:
+              $ref: "#/components/schemas/DocumentSequence"
+        404:
+          description: "Document sequence with requested ID was not found"
+          $ref: "#/components/responses/ErrorResponse"
+
+  /notifications:
+    get:
+      tags:
+        - notifications
+      summary: List Notifications
+      description: Returns a list of Notifications for the authenticated user.
+      operationId: "getNotifications"
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        200:
+          description: "A list of Notifications."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+                  total:
+                    type: integer
+                    description: Total number of Notifications
+                    example: 3
+
+  /settings:
+    get:
+      tags:
+        - settings
+      summary: Get account settings
+      description: Returns a list of settings for the account of authenticated user.
+      operationId: "getSettings"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  footnote:
+                    type: string
+                    description: Footnote that appears on the Documents
+                    example: "Thank you for your purchase."
+                  participantId:
+                    type: string
+                    description: ID of the Participant that is used for the Documents
+                    example: "part_123"
+                  participant:
+                    type: object
+                    description: Supplier information that is used for the Documents
+                    $ref: "#/components/schemas/Participant"
+                  vatPayer:
+                    type: string
+                    enum:
+                      - identifiedPerson
+                      - noVatPayer
+                      - vatPayer
+                  signature:
+                    type: string
+                    description: |
+                      File name of the watermark that appears on the Documents.
+                      Uploaded image should contain stamp or signature.
+                  primaryCurrency:
+                    type: string
+                    description: ISO currency format. So far only CZK is supported.
+
+    patch:
+      tags:
+          - settings
+      summary: Update account settings
+      description: Updates a list of settings for the account of authenticated user.
+      operationId: "updateSettings"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+            type: object
+            properties:
+              footnote:
+                type: string
+                description: Footnote that appears on the Documents
+                example: "Thank you for your purchase."
+
+      responses:
+        204:
+          description: Settings were updated successfully
+
 components:
   schemas:
     Error:
@@ -706,6 +878,86 @@ components:
           type: string
           description: ISO currency format. So far only CZK is supported.
           example: EUR
+
+    DocumentSequence:
+      type: object
+      required:
+        - type
+        - name
+        - prefix
+        - format
+        - sequenceLength
+        - default
+      properties:
+        id:
+          type: string
+          description: ID of the DocumentSequence in `seq_<string>` KSUID format.
+          example: seq_2udYHpoPWQeAazs1GOWA7BEZxUc
+        type:
+          type: string
+          description: Type of the document sequence is for
+          enum:
+            - invoice
+            - order
+            - expense
+        name:
+          type: string
+          description: Name of the document sequence
+          example: Default sequence
+        prefix:
+          type: string
+          description: Prefix of the document sequence
+          example: "N"
+        format:
+          type: string
+          format: string
+          description: Format of the Document sequence. `Y` is for full year (e.g. 2025), `y` is for short year (e.g. 25), `m` is for month (e.g. 03), `d` is for day (e.g. 12).
+          example:
+            - "Y"
+            - "Ym9"
+        sequenceLength:
+          type: integer
+          min: 3
+          max: 7
+          description: How many digits the sequence number has
+        default:
+          type: boolean
+          description: Whether the sequence is default for the account
+
+    Notification:
+      type: object
+      required:
+        - type
+        - title
+        - content
+        - createdAt
+      properties:
+        type:
+          type: string
+          description: Type of the notification
+          enum:
+            - info
+            - warning
+            - error
+            - success
+        title:
+          type: string
+          description: Title of the notification
+          example: Invoice 20250012 was paid
+        content:
+          type: string
+          description: Long description of the notification
+          example: Invoice with symbol 20250012 was paid on 2025-03-12.
+        createdAt:
+          type: string
+          format: date-time
+          description: Date when notification was created
+          example: 2025-03-12T15:23:34Z
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of reading the notification
 
     Participant:
       type: object
