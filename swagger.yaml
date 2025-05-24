@@ -574,6 +574,10 @@ paths:
                   primaryCurrency:
                     type: string
                     description: ISO currency format. So far only CZK is supported.
+                  yearOfRegistration:
+                    type: integer
+                    description: Year of registration of the account, used for determining what years are in year paginator.
+                    example: 2023
 
     patch:
       tags:
