@@ -24,6 +24,29 @@ servers:
     description: "Production server"
 
 paths:
+  /auth/signup:
+    post:
+      summary: "Sign up"
+      description: |
+          Creates a new user account. The user will receive an email with a link to set the password.
+          The user will be logged in automatically after the account is created.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                  description: Full name of the user
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+
   /auth/token:
     post:
       summary: "Get JWT token"
