@@ -183,20 +183,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        code:
-                          type: string
-                          description: ISO currency code
-                          example: CZK
-                        name:
-                          type: string
-                          description: Full name of the currency
-                          example: Česká koruna
-                        symbol:
-                          type: string
-                          description: Symbol of the currency
-                          example: Kč
+                      $ref: "#/components/schemas/Currency"
                   total:
                     type: integer
                     description: Total number of Currencies
@@ -683,6 +670,22 @@ components:
         country:
           type: string
           example: Česká Republika
+
+    Currency:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ISO currency code
+          example: CZK
+        name:
+          type: string
+          description: Full name of the currency
+          example: Česká koruna
+        symbol:
+          type: string
+          description: Symbol of the currency
+          example: Kč
 
     Document:
       type: object
