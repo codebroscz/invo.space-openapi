@@ -165,6 +165,43 @@ paths:
                         description: Internal ID of the Contact.
                         example: 37
 
+  /currencies:
+    get:
+      tags:
+        - currencies
+      summary: List available currencies
+      description: Returns a list of available currencies in the app.
+      operationId: "getCurrencies"
+      responses:
+        200:
+          description: "A list of Currencies."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          description: ISO currency code
+                          example: CZK
+                        name:
+                          type: string
+                          description: Full name of the currency
+                          example: Česká koruna
+                        symbol:
+                          type: string
+                          description: Symbol of the currency
+                          example: Kč
+                  total:
+                    type: integer
+                    description: Total number of Currencies
+                    example: 3
+
   /expenses:
     #    $ref: "./paths/expenses.yaml"
     get:
