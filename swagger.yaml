@@ -606,43 +606,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  footnote:
-                    type: string
-                    description: Footnote that appears on the Documents
-                    example: "Thank you for your purchase."
-                  participantId:
-                    type: string
-                    description: ID of the Participant that is used for the Documents
-                    example: "part_123"
-                  participant:
-                    type: object
-                    description: Supplier information that is used for the Documents
-                    $ref: "#/components/schemas/Participant"
-                  vatPayer:
-                    type: string
-                    enum:
-                      - identifiedPerson
-                      - noVatPayer
-                      - vatPayer
-                  signature:
-                    type: string
-                    description: |
-                      File name of the watermark that appears on the Documents.
-                      Uploaded image should contain stamp or signature.
-                  primaryCurrency:
-                    type: string
-                    description: ISO currency format.
-                  alternativeCurrencies:
-                    type: array
-                    items:
-                      type: string
-                      description: ISO currency format.
-                  yearOfRegistration:
-                    type: integer
-                    description: Year of registration of the account, used for determining what years are in year paginator.
-                    example: 2023
+                '$ref': '#/components/schemas/Settings'
 
     patch:
       tags:
@@ -1081,6 +1045,54 @@ components:
           nullable: true
         address:
           $ref: '#/components/schemas/Address'
+
+    Settings:
+      type: object
+      required:
+        - footnote
+        - participantId
+        - participant
+        - vatPayer
+        - signature
+        - primaryCurrency
+        - alternativeCurrencies
+        - yearOfRegistration
+      properties:
+        footnote:
+          type: string
+          description: Footnote that appears on the Documents
+          example: "Thank you for your purchase."
+        participantId:
+          type: string
+          description: ID of the Participant that is used for the Documents
+          example: "part_123"
+        participant:
+          type: object
+          description: Supplier information that is used for the Documents
+          $ref: "#/components/schemas/Participant"
+        vatPayer:
+          type: string
+          enum:
+            - identifiedPerson
+            - noVatPayer
+            - vatPayer
+        signature:
+          type: string
+          description: |
+            File name of the watermark that appears on the Documents.
+            Uploaded image should contain stamp or signature.
+        primaryCurrency:
+          type: string
+          description: ISO currency format.
+        alternativeCurrencies:
+          type: array
+          items:
+            type: string
+            description: ISO currency format.
+        yearOfRegistration:
+          type: integer
+          description: Year of registration of the account, used for determining what years are in year paginator.
+          example: 2023
 
     CreateDocumentRequest:
       type: object
