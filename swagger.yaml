@@ -633,7 +633,12 @@ paths:
                       Uploaded image should contain stamp or signature.
                   primaryCurrency:
                     type: string
-                    description: ISO currency format. So far only CZK is supported.
+                    description: ISO currency format.
+                  alternativeCurrencies:
+                    type: array
+                    items:
+                      type: string
+                      description: ISO currency format.
                   yearOfRegistration:
                     type: integer
                     description: Year of registration of the account, used for determining what years are in year paginator.
@@ -656,6 +661,18 @@ paths:
                 type: string
                 description: Footnote that appears on the Documents
                 example: "Thank you for your purchase."
+              primaryCurrency:
+                type: string
+                description: ISO currency format.
+                example: CZK
+              alternativeCurrencies:
+                type: array
+                items:
+                  type: string
+                  description: ISO currency format.
+                  example:
+                    - EUR
+                    - USD
 
       responses:
         204:
