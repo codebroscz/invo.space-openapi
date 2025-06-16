@@ -1158,6 +1158,10 @@ components:
         ks:
           type: string
           description: Constant symbol
+        currency:
+          type: string
+          description: ISO currency format.
+          example: CZK
         items:
           type: array
           items:
@@ -1239,6 +1243,10 @@ components:
         ks:
           type: string
           description: Constant symbol
+        currency:
+          type: string
+          description: ISO currency format.
+          example: CZK
         items:
           type: array
           description: Items will be replaced as a whole.
