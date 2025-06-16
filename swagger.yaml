@@ -676,7 +676,7 @@ components:
       properties:
         code:
           type: string
-          description: ISO currency code
+          description: ISO currency format.
           example: CZK
         name:
           type: string
@@ -765,6 +765,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DocumentItem'
+        currency:
+          type: string
+          description: ISO currency format.
+          example: CZK
 
     DocumentItem:
       type: object
@@ -924,7 +928,7 @@ components:
           example: 1250
         currency:
           type: string
-          description: ISO currency format. So far only CZK is supported.
+          description: ISO currency format.
           example: EUR
 
     DocumentSequence:
