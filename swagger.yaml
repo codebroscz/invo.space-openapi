@@ -1069,14 +1069,17 @@ components:
           type: string
           description: Footnote that appears on the Documents
           example: "Thank you for your purchase."
+          nullable: true
         participantId:
           type: string
-          description: ID of the Participant that is used for the Documents
+          description: ID of the Participant that is used for the Documents. `null` if not set yet, e.g. after first login.
           example: "part_123"
+          nullable: true
         participant:
           type: object
-          description: Supplier information that is used for the Documents
+          description: Supplier information that is used for the Documents. `null` if not set yet, e.g. after first login.
           $ref: "#/components/schemas/Participant"
+          nullable: true
         vatPayer:
           type: string
           enum:
@@ -1088,6 +1091,7 @@ components:
           description: |
             File name of the watermark that appears on the Documents.
             Uploaded image should contain stamp or signature.
+          nullable: true
         primaryCurrency:
           type: string
           description: ISO currency format.
@@ -1096,6 +1100,7 @@ components:
           items:
             type: string
             description: ISO currency format.
+          nullable: true
         yearOfRegistration:
           type: integer
           description: Year of registration of the account, used for determining what years are in year paginator.
