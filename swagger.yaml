@@ -1043,6 +1043,12 @@ components:
           nullable: true
           description: Tax identification number (TIN), may not be presenter
           example: CZ45274649
+        vatPayer:
+          type: string
+          enum:
+            - identifiedPerson
+            - noVatPayer
+            - vatPayer
         accountNumber:
           type: string
           description: Account number including bank code
