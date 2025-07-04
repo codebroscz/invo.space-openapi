@@ -710,6 +710,14 @@ components:
           format: date-time
           nullable: true
           description: Date of payment that appears on the document
+        paymentMethod:
+          type: string
+          enum:
+            - bankTransfer
+            - cash
+            - card
+            - cod
+            - other
         status:
           type: string
           enum:
@@ -1157,6 +1165,14 @@ components:
           description: |
             Date until when one wants the payment to be made. 
             May be provided in relative format, e.g. '+15 days'.
+        paymentMethod:
+          type: string
+          enum:
+            - bankTransfer
+            - cash
+            - card
+            - cod
+            - other
         description:
           type: string
           description: Line of text that appears above the list of document items.
