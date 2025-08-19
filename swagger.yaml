@@ -46,6 +46,9 @@ paths:
                 password:
                   type: string
                   format: password
+      responses:
+        204:
+          description: User account successfully created
 
   /auth/token:
     post:
@@ -395,6 +398,25 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+    delete:
+      tags:
+        - invoices
+      summary: Delete Invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: Identification of the Invoice is possible only via its UUID.
+            example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
+      responses:
+        204:
+          description: Invoice was deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /orders:
     #    $ref: "./paths/orders.yaml"
     get:
@@ -528,12 +550,20 @@ paths:
       summary: Get single Document sequence
       description: Returns a Document sequence with requested ID.
       operationId: "getDocumentSequence"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Identification of the Document sequence.
       responses:
         200:
-#          description: ""
+          description: Document sequence with requested ID was found
           content:
             application/json:
-              $ref: "#/components/schemas/DocumentSequence"
+              schema:
+                $ref: "#/components/schemas/DocumentSequence"
         404:
           description: "Document sequence with requested ID was not found"
           $ref: "#/components/responses/ErrorResponse"
@@ -544,15 +574,26 @@ paths:
       summary: Update Document sequence
       description: Updates a Document sequence with requested ID. Setting it as default will replace the current default.
       operationId: "updateDocumentSequence"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Identification of the Document sequence.
       responses:
         200:
-          #          description: ""
+          description: Document sequence with requested ID was found and updated
           content:
             application/json:
-              $ref: "#/components/schemas/DocumentSequence"
+              schema:
+                $ref: "#/components/schemas/DocumentSequence"
         404:
           description: "Document sequence with requested ID was not found"
-          $ref: "#/components/responses/ErrorResponse"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/ErrorResponse"
 
   /notifications:
     get:
@@ -590,6 +631,7 @@ paths:
       operationId: "getSettings"
       responses:
         200:
+          description: Settings were retrieved successfully
           content:
             application/json:
               schema:
@@ -606,24 +648,24 @@ paths:
         content:
           application/json:
             schema:
-            type: object
-            properties:
-              footnote:
-                type: string
-                description: Footnote that appears on the Documents
-                example: "Thank you for your purchase."
-              primaryCurrency:
-                type: string
-                description: ISO currency format.
-                example: CZK
-              alternativeCurrencies:
-                type: array
-                items:
+              type: object
+              properties:
+                footnote:
+                  type: string
+                  description: Footnote that appears on the Documents
+                  example: "Thank you for your purchase."
+                primaryCurrency:
                   type: string
                   description: ISO currency format.
-                  example:
-                    - EUR
-                    - USD
+                  example: CZK
+                alternativeCurrencies:
+                  type: array
+                  items:
+                    type: string
+                    description: ISO currency format.
+                    example:
+                      - EUR
+                      - USD
 
       responses:
         204:
@@ -723,9 +765,12 @@ components:
           enum:
             - issued
             - sent
+            - paidPartially
             - paid
+            - overpaid
             - overdue
             - cancelled
+            - refunded
           description: |
             Initial status of the document is `issued`.
             
@@ -905,9 +950,12 @@ components:
               type: boolean
               description: Whether the VAT is deductible or not. Only for VAT payers.
             vatDeductionProportionPercent:
-              type: number
+              type: string
               format: decimal
-              description: Proportion of VAT deduction in percent. Only for VAT payers.
+              description: |
+                Proportion of VAT deduction in percent. Only for VAT payers. Value is decimal string with 4 decimal places.
+                Can be only whole numbers, but future-proof.
+              example: "50.0000"
 
     Invoice:
       allOf:
@@ -977,8 +1025,8 @@ components:
             - "Ym9"
         sequenceLength:
           type: integer
-          min: 3
-          max: 7
+          minimum: 3
+          maximum: 7
           description: How many digits the sequence number has
         default:
           type: boolean
@@ -1119,6 +1167,28 @@ components:
           type: integer
           description: Year of registration of the account, used for determining what years are in year paginator.
           example: 2023
+
+    CreateSimpleExpenseRequest:
+      type: object
+      required:
+        - receivedAt
+        - files
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
+          description: Date the receipt/invoice was received
+        description:
+          type: string
+          description: Simple description of the expense. Useful for accountants.
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          minItems: 1
+          maxItems: 3
+          description: File attachments of the expense, e.g. PDF invoice, photo of receipt, etc.
 
     CreateDocumentRequest:
       type: object
@@ -1347,38 +1417,41 @@ components:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '#/components/schemas/CreateDocumentRequest'
-              - type: object
-                required:
-                  - expenseType
-                  - receivedAt
-                properties:
-                    expenseType:
+            oneOf:
+              - $ref: '#/components/schemas/CreateSimpleExpenseRequest'
+              -
+                allOf:
+                  - $ref: '#/components/schemas/CreateDocumentRequest'
+                  - type: object
+                    required:
+                      - expenseType
+                      - receivedAt
+                    properties:
+                      expenseType:
                         type: string
                         enum:
-                        - invoice
-                        - receipt
-                        - other
-                    receivedAt:
-                      type: string
-                      format: date-time
-                      description: Date the receipt/invoice was received
-                    taxableAt:
-                      nullable: true
-                      type: string
-                      format: date-time
-                      description: |
-                        Date of VAT applicability.
-                        Required for invoices created by VAT payers. Not allowed for non-VAT payers.
-                    attachment:
+                          - invoice
+                          - receipt
+                          - other
+                      receivedAt:
+                        type: string
+                        format: date-time
+                        description: Date the receipt/invoice was received
+                      taxableAt:
+                        nullable: true
+                        type: string
+                        format: date-time
+                        description: |
+                          Date of VAT applicability.
+                          Required for invoices created by VAT payers. Not allowed for non-VAT payers.
+                      attachment:
                         type: string
                         format: binary
                         description: File attachment of the expense, e.g. PDF invoice, photo of receipt, etc.
-                    vatDeductible:
+                      vatDeductible:
                         type: boolean
                         description: Whether the VAT is deductible or not. Only for VAT payers.
-                    vatDeductionProportionPercent:
+                      vatDeductionProportionPercent:
                         type: number
                         format: decimal
                         description: Proportion of VAT deduction in percent. Only for VAT payers.
