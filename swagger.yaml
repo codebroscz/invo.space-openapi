@@ -1105,6 +1105,14 @@ components:
             - identifiedPerson
             - noVatPayer
             - vatPayer
+        vatPayerReliability:
+          type: string
+          nullable: true
+          enum:
+            - reliable
+            - notReliable
+            - unknown
+          description: Reliability of the VAT payer. `null` if Participant is not vatPayer. `unknown` may indicate that Participant is not VAT payer or is not in ARES anymore.
         accountNumber:
           type: string
           description: Account number including bank code
