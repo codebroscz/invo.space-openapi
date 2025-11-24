@@ -595,6 +595,157 @@ paths:
               schema:
                 $ref: "#/components/responses/ErrorResponse"
 
+  /cash-register/settings:
+    get:
+      tags:
+        - cash-register
+      summary: Get cash register settings
+      description: Returns cash register settings for the authenticated user.
+      operationId: "getCashRegisterSettings"
+      responses:
+        200:
+          description: Cash register settings were retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amountThenPrice:
+                    type: boolean
+                    description: Specifies whether the amount is first typed and then the price or vice versa.
+                  taxRates:
+                    type: array
+                    items:
+                      type: string
+                    description: List of enabled tax rates.
+                    example:
+                      - ['21', '15', '10']
+                  defaultTaxRate:
+                    type: string
+                    description: Default tax rate. Must be one of the enabled tax rates.
+                    example: '21'
+
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /cash-register/daily-summary:
+    get:
+      tags:
+        - cash-register
+      summary: Get daily summary
+      description: Returns daily summary for the authenticated user for the given date.
+      operationId: "getDailySummary"
+      parameters:
+          - $ref: "#/components/parameters/date"
+      responses:
+        200:
+          description: Daily summary was retrieved successfully
+          content:
+            application/json:
+              schema:
+                '$ref': '#/components/schemas/Summary'
+
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /cash-register/monthly-summary:
+    get:
+      tags:
+        - cash-register
+      summary: Get monthly summary
+      description: Returns monthly summary for the authenticated user for the given date.
+      operationId: "getMonthlySummary"
+      parameters:
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+      responses:
+        200:
+          description: Monthly summary was retrieved successfully
+          content:
+            application/json:
+              schema:
+                '$ref': '#/components/schemas/Summary'
+
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /receipts:
+    get:
+      tags:
+        - receipts
+      summary: List Receipts
+      description: Returns a list of Receipts.
+      operationId: "getReceipts"
+      parameters:
+        - $ref: "#/components/parameters/date"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        200:
+          description: "A list of Receipts."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Receipt"
+                  total:
+                    type: integer
+                    description: Total number of Receipts
+                    example: 15
+
+    post:
+      tags:
+        - receipts
+      summary: Create new Receipt
+      operationId: "createReceipt"
+      requestBody:
+        $ref: '#/components/requestBodies/CreateReceipt'
+      responses:
+        200:
+          description: Receipt was created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: UUID of the created Receipt.
+                  uuid:
+                    type: string
+                    description: UUID of the created Receipt.
+                  permalink:
+                    type: string
+                    format: url
+                    description: Permanent link leading to PDF version of the Receipt.
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /receipts/{id}:
+    delete:
+        tags:
+          - receipts
+        summary: Delete Receipt
+        operationId: "deleteReceipt"
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+              description: Identification of the Receipt is possible only via its UUID.
+              example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
+        responses:
+          204:
+            description: Receipt was deleted successfully
+          default:
+            $ref: '#/components/responses/ErrorResponse'
+
   /notifications:
     get:
       tags:
@@ -1175,6 +1326,15 @@ components:
           type: integer
           description: Year of registration of the account, used for determining what years are in year paginator.
           example: 2023
+        features:
+          type: array
+          items:
+            type: string
+          description: List of enabled features for the account.
+          example:
+            - beneficiary
+            - multiCurrency
+            - bank
 
     CreateSimpleExpenseRequest:
       type: object
@@ -1380,7 +1540,103 @@ components:
           format: url
           description: Permanent link leading to PDF version of the Document.
 
+    ReceiptLine:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID4 of the Receipt line
+        amount:
+          type: number
+          format: float
+          description: Quantity of the item
+        unitPrice:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Price of a single unit of the item.
+        taxRate:
+          type: integer
+          description: Tax rate applied on the item or null if VAT is not applicable.
+
+    Receipt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID4 of the Receipt
+        supplier:
+          type: object
+          properties:
+            ico:
+              type: string
+              description: Company identification number
+            dic:
+              type: string
+              description: Tax identification number (TIN)
+        issuedAt:
+          type: string
+          format: date-time
+          description: Date of issuance that appears on the receipt
+        paymentType:
+          type: string
+          enum:
+            - cash
+            - card
+        receiptLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptLine'
+
+    SummaryRow:
+      type: object
+      properties:
+        total:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Total revenue including VAT
+        totalTax:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Total VAT amount
+        totalTaxFree:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Total price excluding VAT
+
+    Summary:
+      type: object
+      properties:
+        total:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Total revenue including VAT
+        byType:
+          type: object
+          properties:
+            cash:
+              $ref: '#/components/schemas/SummaryRow'
+            card:
+              $ref: '#/components/schemas/SummaryRow'
+          description: Summary broken down by payment type
+        byTax:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/SummaryRow'
+          description: Summary broken down by tax rate
+
   parameters:
+    date:
+      name: date
+      in: query
+      required: false
+      schema:
+        type: string
+        description: Date in YYYY-MM-DD format
+        example: 2023-03-15
     year:
       name: year
       in: query
@@ -1554,6 +1810,40 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PatchDocumentRequest'
+
+    CreateReceipt:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - paymentType
+              - receiptLines
+            properties:
+              paymentType:
+                type: string
+                enum:
+                  - cash
+                  - card
+              receiptLines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                      format: float
+                      description: Quantity of the item
+                    unitPrice:
+                      allOf:
+                        - $ref: "#/components/schemas/Money"
+                      description: Price of a single unit of the item.
+                    taxRate:
+                      type: integer
+                      nullable: true
+                      description: Tax rate applied on the item or null if VAT is not applicable.
 
   responses:
     ErrorResponse:
