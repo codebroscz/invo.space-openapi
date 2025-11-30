@@ -1943,6 +1943,11 @@ components:
         productType:
           type: string
           description: product type for single products (enum)
+        price:
+          anyOf:
+            - type: null
+            - allOf:
+                - $ref: "#/components/schemas/Money"
       required:
         - id
         - sku
