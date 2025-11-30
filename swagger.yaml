@@ -1867,6 +1867,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Category'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
       required:
         - id
         - name
