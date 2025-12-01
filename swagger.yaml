@@ -1035,6 +1035,74 @@ paths:
         '204':
           description: No Content
 
+  /products/{id}/prices:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - catalog
+      summary: Get product prices
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductPrice'
+                  total:
+                    type: integer
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+    post:
+      tags:
+        - catalog
+      summary: Set new product price
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductPriceCreate'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /tax-rates:
+    get:
+      tags:
+          - catalog
+      summary: List tax rates
+      responses:
+        '200':
+        description: OK
+        content:
+          application/json:
+          schema:
+            type: object
+            properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaxRate'
+            total:
+              type: integer
+
 components:
   schemas:
     Error:
@@ -2000,6 +2068,87 @@ components:
           type: boolean
         productType:
           type: string
+
+    ProductPrice:
+      type: object
+      properties:
+        taxRate:
+          $ref: '#/components/schemas/TaxRate'
+          description: Tax rate is required if the account is VAT payer.
+        price:
+          $ref: '#/components/schemas/Money'
+        validFrom:
+          type: string
+          format: date-time
+          description: Date from which the price is valid.
+        validTo:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date until which the price is valid.
+        note:
+          type: string
+          nullable: true
+          description: Internal note about the price change.
+      required:
+        - price
+        - validFrom
+        - validTo
+        - note
+
+    ProductPriceCreate:
+      type: object
+      properties:
+        taxRate:
+          $ref: '#/components/schemas/TaxRate'
+          description: Tax rate is required if the account is VAT payer.
+        price:
+          $ref: '#/components/schemas/Money'
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date from which the price is valid. Sets to current date if null.
+        note:
+          type: string
+          nullable: true
+          description: Internal note about the price change.
+      required:
+        - price
+
+    TaxRate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the tax rate
+          example: Standard VAT
+        percentage:
+          type: number
+          description: Percentage value of the tax rate
+          example: 21
+        default:
+          type: string
+          enum:
+            - 'yes'
+            - 'no'
+          description: Whether the tax rate is default within the country
+        validSince:
+          type: string
+          format: date
+          description: Date since when the tax rate is valid
+          example: 2024-01-01
+        validUntil:
+          type: string
+          format: date
+          nullable: true
+          description: Date until when the tax rate is valid
+          example: 2024-12-31
+#        replacedBy:
+#          type: object
+#          nullable: true
+#          description: Tax rate that replaced this tax rate
+#          $ref: '#/components/schemas/TaxRate'
 
   parameters:
     date:
