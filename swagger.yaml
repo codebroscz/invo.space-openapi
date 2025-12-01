@@ -1090,18 +1090,18 @@ paths:
       summary: List tax rates
       responses:
         '200':
-        description: OK
-        content:
-          application/json:
-          schema:
-            type: object
-            properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/TaxRate'
-            total:
-              type: integer
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaxRate'
+                  total:
+                    type: integer
 
 components:
   schemas:
@@ -2012,10 +2012,8 @@ components:
           type: string
           description: product type for single products (enum)
         price:
-          anyOf:
-            - type: null
-            - allOf:
-                - $ref: "#/components/schemas/Money"
+          $ref: "#/components/schemas/ProductPrice"
+
       required:
         - id
         - sku
