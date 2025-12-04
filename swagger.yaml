@@ -2453,6 +2453,12 @@ components:
                       type: integer
                       nullable: true
                       description: Tax rate applied on the item or null if VAT is not applicable.
+                    productId:
+                      type: string
+                      description: Internal ID of the product associated with the receipt line.
+                  required:
+                    - amount
+                    - unitPrice
 
   responses:
     ErrorResponse:
