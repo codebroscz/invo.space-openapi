@@ -2226,6 +2226,13 @@ components:
           nullable: true
           description: Date until when the tax rate is valid
           example: 2024-12-31
+      required:
+        - id
+        - name
+        - percentage
+        - default
+        - validSince
+        - validUntil
 #        replacedBy:
 #          type: object
 #          nullable: true
