@@ -631,12 +631,10 @@ paths:
                   taxRates:
                     type: array
                     items:
-                      type: string
+                      $ref: '#/components/schemas/TaxRate'
                     description: List of enabled tax rates.
-                    example:
-                      - ['21', '15', '10']
                   defaultTaxRate:
-                    type: string
+                    $ref: '#/components/schemas/TaxRate'
                     description: Default tax rate. Must be one of the enabled tax rates.
                     example: '21'
 
