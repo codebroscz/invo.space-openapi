@@ -2178,7 +2178,7 @@ components:
       type: object
       properties:
         taxRate:
-          $ref: '#/components/schemas/TaxRate'
+          $ref: '#/components/schemas/TaxRate/properties/id'
           description: Tax rate is required if the account is VAT payer.
         price:
           $ref: '#/components/schemas/Money'
@@ -2197,6 +2197,10 @@ components:
     TaxRate:
       type: object
       properties:
+        id:
+          type: string
+          description: ID of the tax rate. Currently numeric string, but will be in `tax_<string>` KSUID format in the future.
+          example: '3'
         name:
           type: string
           description: Name of the tax rate
