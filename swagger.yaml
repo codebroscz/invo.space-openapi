@@ -800,6 +800,9 @@ paths:
                     type: string
                     format: url
                     description: Permanent link leading to PDF version of the Receipt.
+                  qr:
+                    type: string
+                    description: If paymentType of created Receipt is 'Qr', then this field contains raw data for QR payment.
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -1941,8 +1944,9 @@ components:
         paymentType:
           type: string
           enum:
-            - cash
-            - card
+            - Cash
+            - Card
+            - Qr
         receiptLines:
           type: array
           items:
@@ -2433,8 +2437,9 @@ components:
               paymentType:
                 type: string
                 enum:
-                  - cash
-                  - card
+                  - Cash
+                  - Card
+                  - Qr
               receiptLines:
                 type: array
                 minItems: 1
