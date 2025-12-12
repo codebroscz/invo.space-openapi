@@ -1920,6 +1920,17 @@ components:
         taxRate:
           type: integer
           description: Tax rate applied on the item or null if VAT is not applicable.
+        product:
+          type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/Product/properties/id'
+            name:
+              $ref: '#/components/schemas/Product/properties/name'
+      required:
+        - id
+        - amount
+        - unitPrice
 
     Receipt:
       type: object
