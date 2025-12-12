@@ -1916,7 +1916,15 @@ components:
         unitPrice:
           allOf:
             - $ref: "#/components/schemas/Money"
-          description: Price of a single unit of the item.
+          description: Price of a single unit of the item including VAT.
+        unitPriceTaxFree:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Price of a single unit of the item excluding VAT.
+        unitTax:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          description: Tax on a single unit of the item.
         taxRate:
           type: integer
           description: Tax rate applied on the item or null if VAT is not applicable.
