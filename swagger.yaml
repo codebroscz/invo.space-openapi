@@ -47,7 +47,7 @@ paths:
                   type: string
                   format: password
       responses:
-        204:
+        '204':
           description: User account successfully created
 
   /auth/token:
@@ -68,7 +68,7 @@ paths:
                   type: string
                   example: "pass"
       responses:
-        200:
+        '200':
           description: "OK"
           content:
             application/json:
@@ -85,9 +85,9 @@ paths:
                     type: string
                     format: date-time
                     example: "2023-03-01T00:00:00Z"
-        400:
+        '400':
           $ref: "#/components/responses/ErrorResponse"
-        401:
+        '401':
           $ref: "#/components/responses/ErrorResponse"
 
   /contacts:
@@ -100,7 +100,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Contacts."
           content:
             application/json:
@@ -128,7 +128,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Participant'
       responses:
-        200:
+        '200':
           description: Contact was created successfully
           content:
             application/json:
@@ -150,7 +150,7 @@ paths:
             type: string
             description: Identification of the Contact. As of now it is symbol of the Contact.
       responses:
-        200:
+        '200':
           description: Contact with requested ID was found
           content:
             application/json:
@@ -176,7 +176,7 @@ paths:
       description: Returns a list of available currencies in the app.
       operationId: "getCurrencies"
       responses:
-        200:
+        '200':
           description: "A list of Currencies."
           content:
             application/json:
@@ -206,7 +206,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Expenses."
           content:
             application/json:
@@ -231,7 +231,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateExpense'
       responses:
-        200:
+        '200':
           description: Expense was created successfully
           content:
             application/json:
@@ -253,7 +253,7 @@ paths:
             type: string
             description: Identification of the Expense. As of now it is symbol of the Expense.
       responses:
-        200:
+        '200':
           description: Expense with requested ID was found
           content:
             application/json:
@@ -284,7 +284,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Invoices."
           content:
             application/json:
@@ -309,7 +309,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateInvoice'
       responses:
-        200:
+        '200':
           description: Invoice was created successfully
           content:
             application/json:
@@ -331,7 +331,7 @@ paths:
             type: string
             description: Identification of the Invoice. As of now it is symbol of the Invoice.
       responses:
-        200:
+        '200':
           description: Invoice with requested ID was found
           content:
             application/json:
@@ -364,7 +364,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/PatchInvoice'
       responses:
-        200:
+        '200':
           description: Invoice was updated successfully
           content:
             application/json:
@@ -389,7 +389,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateInvoice'
       responses:
-        200:
+        '200':
           description: Invoice was updated successfully
           content:
             application/json:
@@ -412,7 +412,7 @@ paths:
             description: Identification of the Invoice is possible only via its UUID.
             example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
       responses:
-        204:
+        '204':
           description: Invoice was deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
@@ -431,7 +431,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Orders."
           content:
             application/json:
@@ -455,7 +455,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateOrder'
       responses:
-        200:
+        '200':
           description: Order was created successfully
           content:
             application/json:
@@ -477,7 +477,7 @@ paths:
             type: string
             description: Identification of the Order. As of now it is symbol of the Order.
       responses:
-        200:
+        '200':
           description: Order with requested ID was found
           content:
             application/json:
@@ -514,7 +514,7 @@ paths:
               - expense
 
       responses:
-        200:
+        '200':
           description: "A list of Document sequences."
           content:
             application/json:
@@ -536,7 +536,7 @@ paths:
       description: Returns a list of Document sequences for the authenticated user.
       operationId: "createDocumentSequence"
       responses:
-        200:
+        '200':
           description: "Returns new Document sequence. Setting it as default will replace the current default."
           content:
             application/json:
@@ -558,13 +558,13 @@ paths:
             type: string
             description: Identification of the Document sequence.
       responses:
-        200:
+        '200':
           description: Document sequence with requested ID was found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DocumentSequence"
-        404:
+        '404':
           description: "Document sequence with requested ID was not found"
           $ref: "#/components/responses/ErrorResponse"
 
@@ -582,13 +582,13 @@ paths:
             type: string
             description: Identification of the Document sequence.
       responses:
-        200:
+        '200':
           description: Document sequence with requested ID was found and updated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DocumentSequence"
-        404:
+        '404':
           description: "Document sequence with requested ID was not found"
           content:
             application/json:
@@ -603,7 +603,7 @@ paths:
       description: Returns cash register settings for the authenticated user.
       operationId: "getCashRegisterSettings"
       responses:
-        200:
+        '200':
           description: Cash register settings were retrieved successfully
           content:
             application/json:
@@ -637,6 +637,16 @@ paths:
                     $ref: '#/components/schemas/TaxRate'
                     description: Default tax rate. Must be one of the enabled tax rates.
                     example: '21'
+                  paymentTypes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - Card
+                        - Cash
+                        - Qr
+                    minItems: 1
+                    description: List of enabled payment types for the cash register. At least one must be provided.
 
         default:
           $ref: '#/components/responses/ErrorResponse'
@@ -683,6 +693,16 @@ paths:
                 printPhone:
                   type: boolean
                   description: Whether to print phone number on the receipt.
+                paymentTypes:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Card
+                      - Cash
+                      - Qr
+                  minItems: 1
+                  description: List of enabled payment types for the cash register. At least one must be provided.
               required:
                 - cashRegisterIdentifier
                 - amountThenPrice
@@ -690,10 +710,11 @@ paths:
                 - workplaceIdentifier
                 - taxRates
                 - defaultTaxRate
+                - paymentTypes
                 - printEmail
                 - printPhone
       responses:
-        201:
+        '201':
           description: Cash register settings were created successfully
           content:
             application/json:
@@ -716,7 +737,7 @@ paths:
       parameters:
           - $ref: "#/components/parameters/date"
       responses:
-        200:
+        '200':
           description: Daily summary was retrieved successfully
           content:
             application/json:
@@ -737,7 +758,7 @@ paths:
         - $ref: "#/components/parameters/year"
         - $ref: "#/components/parameters/month"
       responses:
-        200:
+        '200':
           description: Monthly summary was retrieved successfully
           content:
             application/json:
@@ -759,7 +780,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Receipts."
           content:
             application/json:
@@ -783,7 +804,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateReceipt'
       responses:
-        200:
+        '200':
           description: Receipt was created successfully
           content:
             application/json:
@@ -822,7 +843,7 @@ paths:
               description: Identification of the Receipt is possible only via its UUID.
               example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
         responses:
-          204:
+          '204':
             description: Receipt was deleted successfully
           default:
             $ref: '#/components/responses/ErrorResponse'
@@ -838,7 +859,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
-        200:
+        '200':
           description: "A list of Notifications."
           content:
             application/json:
@@ -862,7 +883,7 @@ paths:
       description: Returns a list of settings for the account of authenticated user.
       operationId: "getSettings"
       responses:
-        200:
+        '200':
           description: Settings were retrieved successfully
           content:
             application/json:
@@ -900,7 +921,7 @@ paths:
                       - USD
 
       responses:
-        204:
+        '204':
           description: Settings were updated successfully
 
   /categories:
@@ -2537,7 +2558,7 @@ webhooks:
                       type: string
                       format: date-time
       responses:
-        200:
+        '200':
           description: Indicate that the data was received successfully
 
 security:
