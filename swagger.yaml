@@ -1956,6 +1956,24 @@ components:
               $ref: '#/components/schemas/Product/properties/id'
             name:
               $ref: '#/components/schemas/Product/properties/name'
+        sale:
+          type: object
+          description: Optional sale applied to the receipt line. When present, the object MUST contain both `type` and `value`.
+          required:
+            - type
+            - value
+          properties:
+            type:
+              type: string
+              enum:
+                - none
+                - absolute
+                - percent
+              description: Type of sale applied to the line.
+            value:
+              type: integer
+              minimum: 1
+              description: Positive integer value of the sale. For `absolute` this is amount in smallest currency unit (e.g. cents), for `percent` this is percentage points (e.g. 10 means 10%).
       required:
         - id
         - amount
@@ -2501,6 +2519,24 @@ components:
                     productId:
                       type: string
                       description: Internal ID of the product associated with the receipt line.
+                    sale:
+                      type: object
+                      description: Optional sale applied to the receipt line. When present, the object MUST contain both `type` and `value`.
+                      required:
+                        - type
+                        - value
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - none
+                            - absolute
+                            - percent
+                          description: Type of sale applied to the line.
+                        value:
+                          type: integer
+                          minimum: 1
+                          description: Positive integer value of the sale. For `absolute` this is amount in smallest currency unit (e.g. cents), for `percent` this is percentage points (e.g. 10 means 10%).
                   required:
                     - amount
                     - unitPrice
