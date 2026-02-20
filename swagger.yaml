@@ -1949,6 +1949,9 @@ components:
         taxRate:
           type: integer
           description: Tax rate applied on the item or null if VAT is not applicable.
+        description:
+          type: string
+          description: Description of the item, if product is set, then description does not take effect.
         product:
           type: object
           properties:
