@@ -2,16 +2,16 @@ openapi: "3.1.0"
 info:
   description: |
     # Official documentation for the invo.space API.
-    
+
     ## Glossary
-    
+
     * Internal ID: identificator in invo.space
     * External ID: identificator in your or other system
     * Document: Expense, Invoice or Order.
-    
+
     ## Common formats
     * UUID version 4
-    * date-time is in ISO 
+    * date-time is in ISO
     * errors follow https://datatracker.ietf.org/doc/html/rfc7807
 
   version: "2.0.0"
@@ -28,8 +28,8 @@ paths:
     post:
       summary: "Sign up"
       description: |
-          Creates a new user account. The user will receive an email with a link to set the password.
-          The user will be logged in automatically after the account is created.
+        Creates a new user account. The user will receive an email with a link to set the password.
+        The user will be logged in automatically after the account is created.
       requestBody:
         content:
           application/json:
@@ -118,7 +118,7 @@ paths:
 
     post:
       tags:
-          - contacts
+        - contacts
       summary: "Create new Contact"
       operationId: "createContact"
       requestBody:
@@ -735,7 +735,7 @@ paths:
       description: Returns daily summary for the authenticated user for the given date.
       operationId: "getDailySummary"
       parameters:
-          - $ref: "#/components/parameters/date"
+        - $ref: "#/components/parameters/date"
       responses:
         '200':
           description: Daily summary was retrieved successfully
@@ -829,24 +829,24 @@ paths:
 
   /receipts/{id}:
     delete:
-        tags:
-          - receipts
-        summary: Delete Receipt
-        operationId: "deleteReceipt"
-        parameters:
-          - name: id
-            in: path
-            required: true
-            schema:
-              type: string
-              format: uuid
-              description: Identification of the Receipt is possible only via its UUID.
-              example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
-        responses:
-          '204':
-            description: Receipt was deleted successfully
-          default:
-            $ref: '#/components/responses/ErrorResponse'
+      tags:
+        - receipts
+      summary: Delete Receipt
+      operationId: "deleteReceipt"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: Identification of the Receipt is possible only via its UUID.
+            example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
+      responses:
+        '204':
+          description: Receipt was deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
   /notifications:
     get:
@@ -892,7 +892,7 @@ paths:
 
     patch:
       tags:
-          - settings
+        - settings
       summary: Update account settings
       description: Updates a list of settings for the account of authenticated user.
       operationId: "updateSettings"
@@ -1188,7 +1188,7 @@ paths:
   /tax-rates:
     get:
       tags:
-          - catalog
+        - catalog
       summary: List tax rates
       responses:
         '200':
@@ -1204,6 +1204,86 @@ paths:
                       $ref: '#/components/schemas/TaxRate'
                   total:
                     type: integer
+
+  /bank-accounts:
+    get:
+      tags:
+        - bank-accounts
+      summary: List invoicing bank accounts
+      description: Returns all bank accounts available for invoicing.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoicingBankAccount'
+    post:
+      tags:
+        - bank-accounts
+      summary: Create invoicing bank account
+      description: |
+        Create a new bank account for invoicing. Can be created from manual entry or linked to an existing synced bank account via `sourceBankAccountId`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoicingBankAccountRequest'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoicingBankAccount'
+
+  /bank-accounts/{id}:
+    patch:
+      tags:
+        - bank-accounts
+      summary: Update invoicing bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInvoicingBankAccountRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoicingBankAccount'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - bank-accounts
+      summary: Delete invoicing bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
 
 components:
   schemas:
@@ -1307,7 +1387,7 @@ components:
             - refunded
           description: |
             Initial status of the document is `issued`.
-            
+
             | Status | Description |
             | ------ | ----------- |
             | `issued` | document was created and is waiting for payment |
@@ -1344,6 +1424,25 @@ components:
           $ref: '#/components/schemas/Participant'
         supplier:
           $ref: '#/components/schemas/Participant'
+        supplierBankAccount:
+          nullable: true
+          description: |
+            Overridden supplier bank account for this document.
+            If null, the supplier's default account from ParticipantData is used.
+          type: object
+          properties:
+            accountNumber:
+              type: string
+              nullable: true
+            bankCode:
+              type: string
+              nullable: true
+            iban:
+              type: string
+              nullable: true
+            bic:
+              type: string
+              nullable: true
         beneficiary:
           nullable: true
           anyOf:
@@ -1654,6 +1753,10 @@ components:
         iban:
           type: string
           nullable: true
+        defaultBankAccountId:
+          type: string
+          nullable: true
+          description: KSUID of the default InvoicingBankAccount to preselect when issuing invoices for this contact.
         address:
           $ref: '#/components/schemas/Address'
 
@@ -1769,7 +1872,7 @@ components:
           type: string
           format: date-time
           description: |
-            Date of issuance that appears on the document. 
+            Date of issuance that appears on the document.
             May be provided in relative format, e.g. '+1 day'.
             Current date if not provided.
         paidAt:
@@ -1777,14 +1880,14 @@ components:
           type: string
           format: date-time
           description: |
-            Date of payment that appears on the document. 
-            May be provided in relative format, e.g. '+1 day'.  
+            Date of payment that appears on the document.
+            May be provided in relative format, e.g. '+1 day'.
             Invoice will not be marked as paid if not provided or null.
         deadlineAt:
           type: string
           format: date-time
           description: |
-            Date until when one wants the payment to be made. 
+            Date until when one wants the payment to be made.
             May be provided in relative format, e.g. '+15 days'.
         paymentMethod:
           type: string
@@ -1810,6 +1913,12 @@ components:
           type: string
           description: ISO currency format.
           example: CZK
+        bankAccountId:
+          type: string
+          nullable: true
+          description: |
+            KSUID of the InvoicingBankAccount to use as the supplier's bank account on the document.
+            If not provided, the system uses: customer's default bank account > account's default bank account > supplier's ParticipantData account.
         items:
           type: array
           items:
@@ -1856,7 +1965,7 @@ components:
           type: string
           format: date-time
           description: |
-            Date of issuance that appears on the document. 
+            Date of issuance that appears on the document.
             May be provided in relative format, e.g. '+1 day'.
             Current date if not provided.
         paidAt:
@@ -1864,14 +1973,14 @@ components:
           type: string
           format: date-time
           description: |
-            Date of payment that appears on the document. 
-            May be provided in relative format, e.g. '+1 day'.  
+            Date of payment that appears on the document.
+            May be provided in relative format, e.g. '+1 day'.
             Invoice will not be marked as paid if not provided or null.
         deadlineAt:
           type: string
           format: date-time
           description: |
-            Date until when one wants the payment to be made. 
+            Date until when one wants the payment to be made.
             May be provided in relative format, e.g. '+15 days'.
         sentAt:
           type: string
@@ -1895,6 +2004,10 @@ components:
           type: string
           description: ISO currency format.
           example: CZK
+        bankAccountId:
+          type: string
+          nullable: true
+          description: KSUID of the InvoicingBankAccount to use as the supplier's bank account on the document.
         items:
           type: array
           description: Items will be replaced as a whole.
@@ -2302,6 +2415,92 @@ components:
 #          description: Tax rate that replaced this tax rate
 #          $ref: '#/components/schemas/TaxRate'
 
+    InvoicingBankAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID of the invoicing bank account (iba_ prefix)
+          example: iba_2NnBKHDxMPBGdFrMjiDkPztLqCJ
+        name:
+          type: string
+          description: User-friendly label for the bank account
+          example: Fio CZK
+        accountNumber:
+          type: string
+          nullable: true
+          description: Account number (without bank code)
+          example: '1234567890'
+        bankCode:
+          type: string
+          nullable: true
+          description: Bank code
+          example: '2010'
+        iban:
+          type: string
+          nullable: true
+          description: IBAN
+          example: CZ6508000000001234567890
+        bic:
+          type: string
+          nullable: true
+          description: BIC/SWIFT code
+        isDefault:
+          type: boolean
+          description: Whether this is the default bank account for the tenant
+        sourceBankAccountId:
+          type: string
+          nullable: true
+          description: ID of the linked synced BankAccount entity (Fio/Moneta/Raiffeisen), if any
+
+    CreateInvoicingBankAccountRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: User-friendly label
+        accountNumber:
+          type: string
+          nullable: true
+        bankCode:
+          type: string
+          nullable: true
+        iban:
+          type: string
+          nullable: true
+        bic:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+          default: false
+        sourceBankAccountId:
+          type: string
+          nullable: true
+          description: If provided, bank account details are copied from the linked BankAccount entity.
+
+    UpdateInvoicingBankAccountRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        accountNumber:
+          type: string
+          nullable: true
+        bankCode:
+          type: string
+          nullable: true
+        iban:
+          type: string
+          nullable: true
+        bic:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+
   parameters:
     date:
       name: date
@@ -2453,7 +2652,7 @@ components:
                     type: string
                     example: |
                       Hello,
-                      
+
                       thank you for your order. Please see the attached order with payment information.
 
     PatchInvoice:
