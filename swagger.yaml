@@ -2252,6 +2252,7 @@ components:
           nullable: true
         mainCategoryId:
           type: string
+          nullable: true
         secondaryCategoryIds:
           type: array
           items:
@@ -2286,6 +2287,7 @@ components:
           type: string
         mainCategoryId:
           type: string
+          nullable: true
         secondaryCategoryIds:
           type: array
           items:
@@ -2311,6 +2313,7 @@ components:
           type: string
         mainCategoryId:
           type: string
+          nullable: true
         secondaryCategoryIds:
           type: array
           items:
