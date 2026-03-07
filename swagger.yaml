@@ -1069,6 +1069,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+        '409':
+          description: SKU already exists
 
   /products/{id}:
     parameters:
@@ -1128,6 +1130,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+        '409':
+          description: SKU already exists
 
     delete:
       tags:
@@ -2243,6 +2247,7 @@ components:
           type: string
         sku:
           type: string
+          description: Unique
         name:
           type: string
         slug:
@@ -2283,6 +2288,7 @@ components:
       properties:
         sku:
           type: string
+          description: Must be unique
         name:
           type: string
         mainCategoryId:
@@ -2309,6 +2315,7 @@ components:
       properties:
         sku:
           type: string
+          description: Must be unique
         name:
           type: string
         mainCategoryId:
