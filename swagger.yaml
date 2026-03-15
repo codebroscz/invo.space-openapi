@@ -1333,20 +1333,63 @@ paths:
       tags:
         - raiffeisen-bank
       summary: Create Raiffeisen Bank credentials
+      description: Saves API credentials (certificate + password) for the Raiffeisen Bank integration. The certificate is validated before saving.
       operationId: "createRaiffeisenBankCredentials"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - certificate
+                - password
+              properties:
+                certificate:
+                  type: string
+                  description: Base64-encoded .p12 certificate.
+                password:
+                  type: string
+                  description: Password for the certificate.
       responses:
-        '200':
-          description: Credentials created successfully
+        '204':
+          description: Credentials saved successfully
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
 
   /raiffeisen-bank/accounts:
     get:
       tags:
         - raiffeisen-bank
-      summary: List tracked Raiffeisen bank accounts
+      summary: List Raiffeisen bank accounts
+      description: Returns accounts available in the Raiffeisen API and already tracked (known) account numbers. Returns 204 if no credentials are configured.
       operationId: "listRaiffeisenBankAccounts"
       responses:
         '200':
-          description: A list of tracked Raiffeisen bank accounts
+          description: Accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      availableAccounts:
+                        type: array
+                        description: Accounts available in the Raiffeisen API.
+                        items:
+                          $ref: '#/components/schemas/RaiffeisenAvailableAccount'
+                      knownAccounts:
+                        type: array
+                        description: Account numbers already tracked in the system.
+                        items:
+                          type: string
+                          example: '1234567890'
+        '204':
+          description: No credentials configured
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
 
   /raiffeisen-bank/accounts/{accountId}:
     post:
