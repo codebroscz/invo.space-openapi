@@ -1422,6 +1422,70 @@ paths:
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
+  /webhooks/trigger:
+    post:
+      tags:
+        - webhooks
+      summary: Trigger a webhook
+      description: |
+        Manually triggers a webhook for a given event and entity.
+        The entity must exist and be in a valid state for the event (e.g. the invoice/order must be paid for paid events).
+        Requires the Webhook feature to be enabled.
+      operationId: "triggerWebhook"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - event
+                - entityId
+              properties:
+                event:
+                  type: string
+                  description: Webhook event type to trigger.
+                  enum:
+                    - invoicePaid
+                    - invoiceUpdated
+                    - orderPaid
+                  example: invoicePaid
+                entityId:
+                  type: string
+                  format: uuid
+                  description: UUID of the entity (invoice or order) related to the event.
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Webhook was triggered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - delivered
+                properties:
+                  delivered:
+                    type: boolean
+                    description: Whether the webhook was actually delivered to the configured URL.
+                  remoteStatusCode:
+                    type: integer
+                    description: HTTP status code returned by the remote webhook URL. Present only when delivered is true.
+                    example: 200
+                  reason:
+                    type: string
+                    description: Reason why the webhook was not delivered. Present only when delivered is false.
+                    enum:
+                      - webhook_url_not_configured
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+
 components:
   schemas:
     Error:
