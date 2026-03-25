@@ -1422,7 +1422,7 @@ paths:
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
-  /webhooks/trigger:
+  /webhooks:
     post:
       tags:
         - webhooks
