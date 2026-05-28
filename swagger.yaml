@@ -1226,18 +1226,23 @@ paths:
         '204':
           description: No Content
 
-  /products/{id}/prices:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
+  /skus:
     get:
       tags:
-        - catalog
-      summary: Get product prices
-      operationId: "getProductPrices"
+        - sales
+      summary: List SKUs
+      description: Returns a paginated list of SKUs, optionally filtered by product.
+      operationId: listSkus
+      parameters:
+        - in: query
+          name: productId
+          schema:
+            type: string
+          required: false
+          description: Filter SKUs by catalog product ID.
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
       responses:
         '200':
           description: OK
@@ -1249,7 +1254,120 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ProductPrice'
+                      $ref: '#/components/schemas/Sku'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      tags:
+        - sales
+      summary: Create SKU
+      operationId: createSku
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkuCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /skus/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: SKU KSUID with sku_ prefix
+    get:
+      tags:
+        - sales
+      summary: Get SKU by id
+      operationId: getSku
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+    patch:
+      tags:
+        - sales
+      summary: Update SKU (partial)
+      operationId: patchSku
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkuPatch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+        - sales
+      summary: Delete SKU
+      operationId: deleteSku
+      responses:
+        '204':
+          description: No Content
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /skus/{id}/prices:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: SKU KSUID with sku_ prefix
+    get:
+      tags:
+        - sales
+      summary: Get SKU price history
+      operationId: getSkuPrices
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        $ref: '#/components/schemas/SkuPrice'
+                      history:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SkuPrice'
                   total:
                     type: integer
         '400':
@@ -1259,24 +1377,229 @@ paths:
 
     post:
       tags:
-        - catalog
-      summary: Set new product price
-      operationId: "createProductPrice"
+        - sales
+      summary: Set new SKU price
+      description: Creates a new price entry for the SKU. The previous price becomes part of the history.
+      operationId: createSkuPrice
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductPriceCreate'
+              $ref: '#/components/schemas/SkuPriceCreate'
       responses:
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
         '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        $ref: '#/components/schemas/SkuPrice'
+                      history:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SkuPrice'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /warehouses:
+    get:
+      tags:
+        - warehouse
+      summary: List warehouses
+      description: Returns a paginated list of warehouses.
+      operationId: listWarehouses
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Warehouse'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      tags:
+        - warehouse
+      summary: Create warehouse
+      operationId: createWarehouse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WarehouseCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /warehouses/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Warehouse KSUID with wh_ prefix
+    get:
+      tags:
+        - warehouse
+      summary: Get warehouse by id
+      operationId: getWarehouse
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+    patch:
+      tags:
+        - warehouse
+      summary: Update warehouse (partial)
+      operationId: patchWarehouse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WarehousePatch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+        - warehouse
+      summary: Delete warehouse
+      operationId: deleteWarehouse
+      responses:
+        '204':
+          description: No Content
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /stock-items:
+    get:
+      tags:
+        - warehouse
+      summary: List stock items
+      description: Returns a paginated list of stock items, optionally filtered by SKU or warehouse.
+      operationId: listStockItems
+      parameters:
+        - in: query
+          name: skuId
+          schema:
+            type: string
+          required: false
+          description: Filter by SKU ID (sku_ prefixed KSUID).
+        - in: query
+          name: warehouseId
+          schema:
+            type: string
+          required: false
+          description: Filter by warehouse ID (wh_ prefixed KSUID).
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockItem'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      tags:
+        - warehouse
+      summary: Create stock item
+      operationId: createStockItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockItemCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItem'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /stock-items/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: StockItem KSUID with si_ prefix
+    get:
+      tags:
+        - warehouse
+      summary: Get stock item by id
+      operationId: getStockItem
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItem'
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
 
   /tax-rates:
     get:
@@ -2644,9 +2967,15 @@ components:
       properties:
         id:
           type: string
-        sku:
+          description: KSUID with pr_ prefix.
+          example: pr_2udYHpoPWQeAazs1GOWA7BEZxUc
+        productType:
           type: string
-          description: Unique
+          enum:
+            - physical
+            - virtual
+            - service
+            - package
         name:
           type: string
         slug:
@@ -2666,18 +2995,10 @@ components:
         createdAt:
           type: string
           format: date-time
-        productType:
-          type: string
-          description: product type for single products (enum)
-        price:
-          $ref: "#/components/schemas/ProductPrice"
-
       required:
         - id
-        - sku
         - name
         - slug
-        - mainCategoryId
 
     ProductCreate:
       type: object
@@ -2725,12 +3046,85 @@ components:
         productType:
           type: string
 
-    ProductPrice:
+    Sku:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with sku_ prefix.
+          example: sku_2udYHpoPWQeAazs1GOWA7BEZxUc
+        code:
+          type: string
+          description: Unique SKU code (the sellable unit identifier).
+        productId:
+          type: string
+          description: Reference to the catalog Product ID (pr_ prefixed KSUID).
+        isBundle:
+          type: boolean
+          description: Whether this SKU is a bundle of other SKUs.
+        isActive:
+          type: boolean
+        price:
+          $ref: '#/components/schemas/SkuPrice'
+          description: Current active price, null if no price is set.
+        bundleItems:
+          type: array
+          description: Present only when isBundle is true.
+          items:
+            $ref: '#/components/schemas/BundleItem'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - productId
+        - isBundle
+        - isActive
+
+    SkuCreate:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Unique SKU code.
+        productId:
+          type: string
+          description: Catalog Product ID (pr_ prefixed KSUID).
+        isBundle:
+          type: boolean
+          default: false
+        isActive:
+          type: boolean
+          default: true
+        bundleItems:
+          type: [array, 'null']
+          description: Required when isBundle is true.
+          items:
+            $ref: '#/components/schemas/BundleItem'
+      required:
+        - code
+        - productId
+
+    SkuPatch:
+      type: object
+      properties:
+        code:
+          type: string
+        isActive:
+          type: boolean
+        bundleItems:
+          type: [array, 'null']
+          description: Replaces all bundle items. Only applicable to bundle SKUs.
+          items:
+            $ref: '#/components/schemas/BundleItem'
+
+    SkuPrice:
       type: object
       properties:
         taxRate:
           $ref: '#/components/schemas/TaxRate'
-          description: Tax rate is required if the account is VAT payer.
+          description: Tax rate applied to this price. Required if the account is a VAT payer.
         price:
           $ref: '#/components/schemas/Money'
         validFrom:
@@ -2750,23 +3144,140 @@ components:
         - validTo
         - note
 
-    ProductPriceCreate:
+    SkuPriceCreate:
       type: object
       properties:
         taxRate:
           $ref: '#/components/schemas/TaxRate/properties/id'
-          description: Tax rate is required if the account is VAT payer.
+          description: Tax rate ID. Required if the account is a VAT payer.
         price:
           $ref: '#/components/schemas/Money'
         validFrom:
           type: [string, 'null']
           format: date-time
-          description: Date from which the price is valid. Sets to current date if null.
+          description: Date from which the price is valid. Defaults to current date if null.
         note:
           type: [string, 'null']
           description: Internal note about the price change.
       required:
         - price
+
+    BundleItem:
+      type: object
+      properties:
+        componentSkuId:
+          type: string
+          description: ID of the component SKU (sku_ prefixed KSUID).
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantity of this component in the bundle.
+      required:
+        - componentSkuId
+        - quantity
+
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with wh_ prefix.
+          example: wh_2udYHpoPWQeAazs1GOWA7BEZxUc
+        name:
+          type: string
+        code:
+          type: string
+          description: Short warehouse identifier, e.g. "WH-01".
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - code
+
+    WarehouseCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+      required:
+        - name
+        - code
+
+    WarehousePatch:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        isActive:
+          type: boolean
+
+    StockItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with ip_ prefix.
+          example: ip_2udYHpoPWQeAazs1GOWA7BEZxUc
+        skuId:
+          type: string
+          description: Reference to SKU ID (sku_ prefixed KSUID).
+        warehouseId:
+          type: string
+          description: Reference to Warehouse ID (wh_ prefixed KSUID).
+        quantityOnHand:
+          type: integer
+          description: Physical stock count.
+        quantityReserved:
+          type: integer
+          description: Quantity reserved for pending orders.
+        quantityAvailable:
+          type: integer
+          description: "Computed: quantityOnHand - quantityReserved."
+        batchNumber:
+          type: [string, 'null']
+        binLocation:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - skuId
+        - warehouseId
+        - quantityOnHand
+        - quantityReserved
+        - quantityAvailable
+
+    StockItemCreate:
+      type: object
+      properties:
+        skuId:
+          type: string
+          description: SKU ID (sku_ prefixed KSUID).
+        warehouseId:
+          type: string
+          description: Warehouse ID (wh_ prefixed KSUID).
+        batchNumber:
+          type: [string, 'null']
+        binLocation:
+          type: [string, 'null']
+        quantityOnHand:
+          type: integer
+          default: 0
+      required:
+        - skuId
+        - warehouseId
 
     TaxRate:
       type: object
@@ -2999,6 +3510,14 @@ components:
         default: 0
         description: Number of items to skip
         example: 10
+    orderBy:
+      name: orderBy
+      in: query
+      required: false
+      schema:
+        type: string
+        description: 'Comma-separated list of field:direction pairs for sorting (e.g. id:desc,name:asc).'
+        example: 'id:desc'
 
   requestBodies:
     CreateExpense:
