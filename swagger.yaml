@@ -566,7 +566,10 @@ paths:
                 $ref: "#/components/schemas/DocumentSequence"
         '404':
           description: "Document sequence with requested ID was not found"
-          $ref: "#/components/responses/ErrorResponse"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/ErrorResponse"
 
     post:
       tags:
