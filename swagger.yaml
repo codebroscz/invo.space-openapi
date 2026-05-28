@@ -1301,6 +1301,61 @@ paths:
                   total:
                     type: integer
 
+  /bank:
+    get:
+      tags:
+        - bank
+      summary: List banks
+      operationId: "getBanks"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankAccount'
+                  total:
+                    type: integer
+
+  /bank/{bankAccountId}/transactions:
+    get:
+      tags:
+        - bank
+      summary: List bank account transactions
+      operationId: "getBankAccountTransactions"
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ksuid
+            description: KSUID of the bank account
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankAccountTransaction'
+                  total:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+          description: Invalid bank account ID format
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
   /bank-accounts:
     get:
       tags:
@@ -1630,6 +1685,92 @@ components:
         country:
           type: string
           example: Česká Republika
+
+    BankAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: ksuid
+          description: KSUID of the bank account
+        name:
+          type: string
+          description: Name of the bank account
+        bankAccount:
+          type: object
+          properties:
+            accountNumber:
+              type: string
+              description: Account number of the bank account
+            bankCode:
+              type: string
+              description: Bank code of the bank account
+            iban:
+              type: string
+              description: IBAN of the bank account
+            bic:
+              type: string
+              description: BIC of the bank account
+        currency:
+          type: string
+          description: ISO currency format.
+          example: CZK
+        balance:
+          type: number
+          format: float
+          description: Balance of the bank account
+        lastFetch:
+          type: string
+          format: date-time
+          description: Date and time of the last fetch of the bank account transactions
+        fetchEnabled:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          description: Whether fetching of the bank account transactions is enabled
+
+    BankAccountTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: numeric-string
+          description: Numeric ID of the bank account transaction
+        externalId:
+          type: string
+          description: External ID of the bank account transaction
+        date:
+          type: string
+          format: date-time
+          description: Date of the bank account transaction
+        amount:
+          $ref: '#/components/schemas/Money'
+          description: Amount of the bank account transaction
+        payer:
+          type: string
+          description: Payer as provided by the bank
+        message:
+          type: string
+          description: Message as provided by the bank
+        note:
+          type: string
+          description: Note as provided by the bank
+        comment:
+          type: string
+          description: Comment as provided by the bank
+        vs:
+          type: string
+          format: numeric-string
+          description: Variable symbol
+        ss:
+          type: string
+          format: numeric-string
+          description: Specific symbol
+        ks:
+          type: string
+          format: numeric-string
+          description: Constant symbol
 
     Currency:
       type: object
