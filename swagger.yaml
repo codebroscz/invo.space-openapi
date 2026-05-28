@@ -1231,7 +1231,11 @@ paths:
       tags:
         - sales
       summary: List SKUs
-      description: Returns a paginated list of SKUs, optionally filtered by product.
+      description: |
+        Returns a paginated list of SKUs, optionally filtered by product.
+        When filtered by productId, returns the system SKU only if it is the sole SKU for that product;
+        otherwise user-defined SKUs are returned and the system SKU is excluded.
+        Without productId, system SKUs are excluded from the account-wide list.
       operationId: listSkus
       parameters:
         - in: query
@@ -3064,6 +3068,9 @@ components:
           description: Whether this SKU is a bundle of other SKUs.
         isActive:
           type: boolean
+        isSystem:
+          type: boolean
+          description: True for the auto-created hidden SKU. Omitted from product SKU lists when user-defined SKUs exist.
         price:
           $ref: '#/components/schemas/SkuPrice'
           description: Current active price, null if no price is set.
@@ -3081,6 +3088,7 @@ components:
         - productId
         - isBundle
         - isActive
+        - isSystem
 
     SkuCreate:
       type: object
