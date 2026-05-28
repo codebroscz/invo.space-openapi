@@ -3086,17 +3086,109 @@ webhooks:
                 payload:
                   type: object
                   required:
+                    - uuid
                     - symbol
                     - dateOfPayment
                   properties:
+                    uuid:
+                      type: string
+                      format: uuid
+                      description: UUID of the Invoice
                     symbol:
                       type: string
                       description: Symbol of the paid Invoice
+                    orderUuid:
+                      type: string
+                      format: uuid
+                      description: UUID of the related Order
                     orderSymbol:
                       type: [string, 'null']
                       description: Symbol of the associated Order
                     customSymbol:
                       type: [string, 'null']
+                    dateOfPayment:
+                      type: string
+                      format: date-time
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: Indicate that the data was received successfully
+
+  invoiceUpdated:
+    post:
+      summary: Invoice updated event payload
+      operationId: "invoiceUpdatedWebhook"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  enum:
+                    - invoiceUpdated
+                payload:
+                  type: object
+                  required:
+                    - invoiceUuid
+                    - symbol
+                  properties:
+                    invoiceUuid:
+                      type: string
+                      format: uuid
+                      description: UUID of the Invoice
+                    symbol:
+                      type: string
+                      description: Symbol of the paid Invoice
+                    orderUuid:
+                      type: string
+                      format: uuid
+                      description: UUID of the related Order
+                    orderSymbol:
+                      type: [string, 'null']
+                      description: Symbol of the associated Order
+                    customSymbol:
+                      type: [string, 'null']
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DocumentItem'
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: Indicate that the data was received successfully
+
+  orderPaid:
+    post:
+      summary: Order paid event payload
+      operationId: "orderPaidWebhook"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  enum:
+                    - orderPaid
+                payload:
+                  type: object
+                  required:
+                    - uuid
+                    - symbol
+                    - dateOfPayment
+                  properties:
+                    uuid:
+                      type: string
+                      format: uuid
+                      description: UUID of the paid Order
+                    symbol:
+                      type: string
+                      description: Symbol of the paid Order
                     dateOfPayment:
                       type: string
                       format: date-time
