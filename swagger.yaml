@@ -27,6 +27,7 @@ paths:
   /auth/signup:
     post:
       summary: "Sign up"
+      operationId: "signUp"
       description: |
         Creates a new user account. The user will receive an email with a link to set the password.
         The user will be logged in automatically after the account is created.
@@ -47,12 +48,15 @@ paths:
                   type: string
                   format: password
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '204':
           description: User account successfully created
 
   /auth/token:
     post:
       summary: "Get JWT token"
+      operationId: "getAuthToken"
       description: |
         Returns a JWT token for the given credentials.
       requestBody:
@@ -96,10 +100,13 @@ paths:
       tags:
         - contacts
       summary: "List Contacts"
+      operationId: "getContacts"
       parameters:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Contacts."
           content:
@@ -128,6 +135,8 @@ paths:
             schema:
               $ref: '#/components/schemas/Participant'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Contact was created successfully
           content:
@@ -142,6 +151,7 @@ paths:
       tags:
         - contacts
       summary: Get single Contact
+      operationId: "getContact"
       parameters:
         - name: id
           in: path
@@ -150,6 +160,8 @@ paths:
             type: string
             description: Identification of the Contact. As of now it is symbol of the Contact.
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Contact with requested ID was found
           content:
@@ -166,7 +178,7 @@ paths:
                       id:
                         type: string
                         description: Internal ID of the Contact.
-                        example: 37
+                        example: "37"
 
   /currencies:
     get:
@@ -176,6 +188,8 @@ paths:
       description: Returns a list of available currencies in the app.
       operationId: "getCurrencies"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Currencies."
           content:
@@ -206,6 +220,8 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Expenses."
           content:
@@ -231,6 +247,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateExpense'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Expense was created successfully
           content:
@@ -245,6 +263,7 @@ paths:
       tags:
         - expenses
       summary: Get single Expense
+      operationId: "getExpense"
       parameters:
         - name: id
           in: path
@@ -253,6 +272,8 @@ paths:
             type: string
             description: Identification of the Expense. As of now it is symbol of the Expense.
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Expense with requested ID was found
           content:
@@ -266,7 +287,7 @@ paths:
                         type: string
                         format: url
                         description: Permanent link leading to PDF version of the Expense.
-                        example: /permalink/expense/9961d718-cae7-48e9-845d-e5c21f4ecdb3
+                        example: "https://invo.space/permalink/expense/9961d718-cae7-48e9-845d-e5c21f4ecdb3"
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -284,6 +305,8 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Invoices."
           content:
@@ -309,6 +332,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateInvoice'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Invoice was created successfully
           content:
@@ -323,6 +348,7 @@ paths:
       tags:
         - invoices
       summary: Get single Invoice
+      operationId: "getInvoice"
       parameters:
         - name: id
           in: path
@@ -331,6 +357,8 @@ paths:
             type: string
             description: Identification of the Invoice. As of now it is symbol of the Invoice.
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Invoice with requested ID was found
           content:
@@ -344,7 +372,7 @@ paths:
                         type: string
                         format: url
                         description: Permanent link leading to PDF version of the Invoice.
-                        example: /permalink/invoice/9961d718-cae7-48e9-845d-e5c21f4ecdb3
+                        example: "https://invo.space/permalink/invoice/9961d718-cae7-48e9-845d-e5c21f4ecdb3"
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -352,6 +380,7 @@ paths:
       tags:
         - invoices
       summary: Partially update Invoice
+      operationId: "patchInvoice"
       parameters:
         - name: id
           in: path
@@ -364,6 +393,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/PatchInvoice'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Invoice was updated successfully
           content:
@@ -377,6 +408,7 @@ paths:
       tags:
         - invoices
       summary: Update Invoice
+      operationId: "updateInvoice"
       parameters:
         - name: id
           in: path
@@ -389,6 +421,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateInvoice'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Invoice was updated successfully
           content:
@@ -402,6 +436,7 @@ paths:
       tags:
         - invoices
       summary: Delete Invoice
+      operationId: "deleteInvoice"
       parameters:
         - name: id
           in: path
@@ -412,6 +447,8 @@ paths:
             description: Identification of the Invoice is possible only via its UUID.
             example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '204':
           description: Invoice was deleted successfully
         default:
@@ -431,6 +468,8 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Orders."
           content:
@@ -455,6 +494,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateOrder'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Order was created successfully
           content:
@@ -469,6 +510,7 @@ paths:
       tags:
         - orders
       summary: Get single Order
+      operationId: "getOrder"
       parameters:
         - name: id
           in: path
@@ -477,6 +519,8 @@ paths:
             type: string
             description: Identification of the Order. As of now it is symbol of the Order.
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Order with requested ID was found
           content:
@@ -490,7 +534,7 @@ paths:
                         type: string
                         format: url
                         description: Permanent link leading to PDF version of the Order.
-                        example: /permalink/order/9961d718-cae7-48e9-845d-e5c21f4ecdb3
+                        example: "https://invo.space/permalink/order/9961d718-cae7-48e9-845d-e5c21f4ecdb3"
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -514,6 +558,8 @@ paths:
               - expense
 
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Document sequences."
           content:
@@ -536,6 +582,8 @@ paths:
       description: Returns a list of Document sequences for the authenticated user.
       operationId: "createDocumentSequence"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "Returns new Document sequence. Setting it as default will replace the current default."
           content:
@@ -565,11 +613,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DocumentSequence"
         '404':
-          description: "Document sequence with requested ID was not found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/responses/ErrorResponse"
+          $ref: "#/components/responses/ErrorResponse"
 
     post:
       tags:
@@ -592,11 +636,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DocumentSequence"
         '404':
-          description: "Document sequence with requested ID was not found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/responses/ErrorResponse"
+          $ref: "#/components/responses/ErrorResponse"
 
   /cash-register/settings:
     get:
@@ -606,6 +646,8 @@ paths:
       description: Returns cash register settings for the authenticated user.
       operationId: "getCashRegisterSettings"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Cash register settings were retrieved successfully
           content:
@@ -685,7 +727,8 @@ paths:
                     type: string
                   description: List of IDs of enabled tax rates. Not every seller sells goods in all tax rates, this can help to simplify GUI of the cash register and therefore UX.
                   example:
-                    - ['1', '3']
+                    - "1"
+                    - "3"
                 defaultTaxRate:
                   type: string
                   description: Default tax rate that is selected in cash register. Must be one of the enabled tax rates.
@@ -717,6 +760,8 @@ paths:
                 - printEmail
                 - printPhone
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '201':
           description: Cash register settings were created successfully
           content:
@@ -740,6 +785,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/date"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Daily summary was retrieved successfully
           content:
@@ -761,6 +808,8 @@ paths:
         - $ref: "#/components/parameters/year"
         - $ref: "#/components/parameters/month"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Monthly summary was retrieved successfully
           content:
@@ -783,6 +832,8 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Receipts."
           content:
@@ -807,6 +858,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateReceipt'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Receipt was created successfully
           content:
@@ -846,6 +899,8 @@ paths:
             description: Identification of the Receipt is possible only via its UUID.
             example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '204':
           description: Receipt was deleted successfully
         default:
@@ -862,6 +917,8 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: "A list of Notifications."
           content:
@@ -886,6 +943,8 @@ paths:
       description: Returns a list of settings for the account of authenticated user.
       operationId: "getSettings"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Settings were retrieved successfully
           content:
@@ -919,11 +978,13 @@ paths:
                   items:
                     type: string
                     description: ISO currency format.
-                    example:
-                      - EUR
-                      - USD
+                  example:
+                    - "EUR"
+                    - "USD"
 
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '204':
           description: Settings were updated successfully
 
@@ -932,6 +993,7 @@ paths:
       tags:
         - catalog
       summary: List categories
+      operationId: "getCategories"
       parameters:
         - in: query
           name: parentId
@@ -940,6 +1002,8 @@ paths:
           required: false
           description: Filter categories by parent category id
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
@@ -958,6 +1022,7 @@ paths:
       tags:
         - catalog
       summary: Create category
+      operationId: "createCategory"
       requestBody:
         required: true
         content:
@@ -965,6 +1030,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CategoryCreate'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '201':
           description: Created
           content:
@@ -983,6 +1050,7 @@ paths:
       tags:
         - catalog
       summary: Get category by id
+      operationId: "getCategory"
       responses:
         '200':
           description: OK
@@ -999,6 +1067,7 @@ paths:
       tags:
         - catalog
       summary: Update category (partial)
+      operationId: "patchCategory"
       requestBody:
         required: true
         content:
@@ -1021,6 +1090,7 @@ paths:
       tags:
         - catalog
       summary: Delete category
+      operationId: "deleteCategory"
       responses:
         '204':
           description: No Content
@@ -1034,6 +1104,7 @@ paths:
       tags:
         - catalog
       summary: List products
+      operationId: "getProducts"
       parameters:
         - in: query
           name: mainCategoryId
@@ -1041,6 +1112,8 @@ paths:
             type: string
           required: false
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
@@ -1059,6 +1132,7 @@ paths:
       tags:
         - catalog
       summary: Create product
+      operationId: "createProduct"
       requestBody:
         required: true
         content:
@@ -1086,6 +1160,7 @@ paths:
       tags:
         - catalog
       summary: Get product by id
+      operationId: "getProduct"
       responses:
         '200':
           description: OK
@@ -1102,6 +1177,7 @@ paths:
       tags:
         - catalog
       summary: Replace product
+      operationId: "updateProduct"
       requestBody:
         required: true
         content:
@@ -1109,6 +1185,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductCreate'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
@@ -1120,6 +1198,7 @@ paths:
       tags:
         - catalog
       summary: Update product (partial)
+      operationId: "patchProduct"
       requestBody:
         required: true
         content:
@@ -1140,7 +1219,10 @@ paths:
       tags:
         - catalog
       summary: Delete product
+      operationId: "deleteProduct"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '204':
           description: No Content
 
@@ -1155,6 +1237,7 @@ paths:
       tags:
         - catalog
       summary: Get product prices
+      operationId: "getProductPrices"
       responses:
         '200':
           description: OK
@@ -1178,6 +1261,7 @@ paths:
       tags:
         - catalog
       summary: Set new product price
+      operationId: "createProductPrice"
       requestBody:
         required: true
         content:
@@ -1185,6 +1269,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductPriceCreate'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '201':
           description: OK
           content:
@@ -1197,7 +1283,10 @@ paths:
       tags:
         - catalog
       summary: List tax rates
+      operationId: "getTaxRates"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
@@ -1217,8 +1306,11 @@ paths:
       tags:
         - bank-accounts
       summary: List invoicing bank accounts
+      operationId: "getBankAccounts"
       description: Returns all bank accounts available for invoicing.
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
@@ -1234,6 +1326,7 @@ paths:
       tags:
         - bank-accounts
       summary: Create invoicing bank account
+      operationId: "createBankAccount"
       description: |
         Create a new bank account for invoicing. Can be created from manual entry or linked to an existing synced bank account via `sourceBankAccountId`.
       requestBody:
@@ -1243,6 +1336,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateInvoicingBankAccountRequest'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Created
           content:
@@ -1255,6 +1350,7 @@ paths:
       tags:
         - bank-accounts
       summary: Update invoicing bank account
+      operationId: "patchBankAccount"
       parameters:
         - name: id
           in: path
@@ -1280,6 +1376,7 @@ paths:
       tags:
         - bank-accounts
       summary: Delete invoicing bank account
+      operationId: "deleteBankAccount"
       parameters:
         - name: id
           in: path
@@ -1300,6 +1397,8 @@ paths:
       description: Returns connection status, available accounts from Raiffeisen API, and already tracked (known) accounts.
       operationId: "getRaiffeisenBankStatus"
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Integration status retrieved successfully
           content:
@@ -1391,6 +1490,8 @@ paths:
                           example: '1234567890'
         '204':
           description: No credentials configured
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
@@ -1504,8 +1605,7 @@ components:
         code:
           type: integer
           description: Numeric code uniquely identifying the error. Note that codes are NOT unique across endpoints.
-          example:
-            - 40001
+          example: 40001
         title:
           type: string
           description: Message uniquely identifying the error.
@@ -1566,9 +1666,8 @@ components:
           format: date-time
           description: Date until when one wants the payment to be made
         paidAt:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date of payment that appears on the document
         paymentMethod:
           type: string
@@ -1600,8 +1699,7 @@ components:
             | `overdue` | document is not paid and is past the deadline |
             | `cancelled` | document was cancelled |
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Line of text that appears above the list of document items
         vs:
           type: string
@@ -1620,37 +1718,33 @@ components:
           format: date-time
           description: Date of creation of the document
         updatedAt:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date of last modification of the document
         customer:
           $ref: '#/components/schemas/Participant'
         supplier:
           $ref: '#/components/schemas/Participant'
         supplierBankAccount:
-          nullable: true
           description: |
             Overridden supplier bank account for this document.
             If null, the supplier's default account from ParticipantData is used.
-          type: object
-          properties:
-            accountNumber:
-              type: string
-              nullable: true
-            bankCode:
-              type: string
-              nullable: true
-            iban:
-              type: string
-              nullable: true
-            bic:
-              type: string
-              nullable: true
+          anyOf:
+            - type: object
+              properties:
+                accountNumber:
+                  type: [string, 'null']
+                bankCode:
+                  type: [string, 'null']
+                iban:
+                  type: [string, 'null']
+                bic:
+                  type: [string, 'null']
+            - type: 'null'
         beneficiary:
-          nullable: true
           anyOf:
             - $ref: '#/components/schemas/Participant'
+            - type: 'null'
         items:
           type: array
           items:
@@ -1680,11 +1774,7 @@ components:
         unit:
           type: string
           description: Unit of the item
-          example:
-            - h
-            - MD
-            - x
-            - ks
+          example: "h"
         description:
           type: string
           description: Description of the item
@@ -1731,11 +1821,7 @@ components:
         unit:
           type: string
           description: Unit of the item
-          example:
-            - h
-            - MD
-            - x
-            - ks
+          example: "h"
         description:
           type: string
           description: Description of the item
@@ -1804,8 +1890,7 @@ components:
               format: date-time
               description: Date of VAT applicability (DUZP in CZE)
             order:
-              type: string
-              nullable: true
+              type: [string, 'null']
               description: Reference to Order ID.
 
     Order:
@@ -1818,7 +1903,7 @@ components:
         amount:
           type: string
           description: Amount of currency in cents, e.g. 1000 means 10.00 EUR
-          example: 1250
+          example: "1250"
         currency:
           type: string
           description: ISO currency format.
@@ -1857,9 +1942,7 @@ components:
           type: string
           format: string
           description: Format of the Document sequence. `Y` is for full year (e.g. 2025), `y` is for short year (e.g. 25), `m` is for month (e.g. 03), `d` is for day (e.g. 12).
-          example:
-            - "Y"
-            - "Ym9"
+          example: "Y"
         sequenceLength:
           type: integer
           minimum: 3
@@ -1899,9 +1982,8 @@ components:
           description: Date when notification was created
           example: 2025-03-12T15:23:34Z
         readAt:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date of reading the notification
 
     Participant:
@@ -1925,15 +2007,13 @@ components:
           example: email@example.com
         phone:
           type: string
-          example: 603112233
+          example: "603112233"
         ico:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Company identification number, may not be present (e.g. end consumer)
-          example: 45274649
+          example: "45274649"
         dic:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Tax identification number (TIN), may not be presenter
           example: CZ45274649
         vatPayer:
@@ -1943,8 +2023,7 @@ components:
             - noVatPayer
             - vatPayer
         vatPayerReliability:
-          type: string
-          nullable: true
+          type: [string, 'null']
           enum:
             - reliable
             - notReliable
@@ -1955,11 +2034,9 @@ components:
           description: Account number including bank code
           example: 1234567890/0000
         iban:
-          type: string
-          nullable: true
+          type: [string, 'null']
         defaultBankAccountId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: KSUID of the default InvoicingBankAccount to preselect when issuing invoices for this contact.
         address:
           $ref: '#/components/schemas/Address'
@@ -1977,20 +2054,18 @@ components:
         - yearOfRegistration
       properties:
         footnote:
-          type: string
+          type: [string, 'null']
           description: Footnote that appears on the Documents
           example: "Thank you for your purchase."
-          nullable: true
         participantId:
-          type: string
+          type: [string, 'null']
           description: ID of the Participant that is used for the Documents. `null` if not set yet, e.g. after first login.
           example: "part_123"
-          nullable: true
         participant:
-          type: object
           description: Supplier information that is used for the Documents. `null` if not set yet, e.g. after first login.
-          $ref: "#/components/schemas/Participant"
-          nullable: true
+          anyOf:
+            - $ref: "#/components/schemas/Participant"
+            - type: 'null'
         vatPayer:
           type: string
           enum:
@@ -1998,20 +2073,18 @@ components:
             - noVatPayer
             - vatPayer
         signature:
-          type: string
+          type: [string, 'null']
           description: |
             File name of the watermark that appears on the Documents.
             Uploaded image should contain stamp or signature.
-          nullable: true
         primaryCurrency:
           type: string
           description: ISO currency format.
         alternativeCurrencies:
-          type: array
+          type: [array, 'null']
           items:
             type: string
             description: ISO currency format.
-          nullable: true
         yearOfRegistration:
           type: integer
           description: Year of registration of the account, used for determining what years are in year paginator.
@@ -2057,31 +2130,28 @@ components:
       properties:
         symbol:
           description: Actually a custom symbol (identification) of the Document from your system
-          type: string
-          nullable: true
+          type: [string, 'null']
         customer:
           anyOf:
             - type: string
               description: Internal ID of Customer
             - $ref: '#/components/schemas/Participant'
         beneficiary:
-          nullable: true
           description: Beneficiary feature must be enabled for the account.
           anyOf:
             - type: string
               description: Internal ID of customer
             - $ref: '#/components/schemas/Participant'
+            - type: 'null'
         issuedAt:
-          nullable: true
-          type: string
+          type: [string, 'null']
           format: date-time
           description: |
             Date of issuance that appears on the document.
             May be provided in relative format, e.g. '+1 day'.
             Current date if not provided.
         paidAt:
-          nullable: true
-          type: string
+          type: [string, 'null']
           format: date-time
           description: |
             Date of payment that appears on the document.
@@ -2118,8 +2188,7 @@ components:
           description: ISO currency format.
           example: CZK
         bankAccountId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: |
             KSUID of the InvoicingBankAccount to use as the supplier's bank account on the document.
             If not provided, the system uses: customer's default bank account > account's default bank account > supplier's ParticipantData account.
@@ -2135,11 +2204,11 @@ components:
         id:
           type: string
           description: Internal ID of the created Document. Currently it is sequence number of the Document.
-          example: 20230001
+          example: "20230001"
         symbol:
           type: string
           description: Sequence number of the created Document.
-          example: 20230001
+          example: "20230001"
         uuid:
           type: string
           format: uuid
@@ -2159,12 +2228,12 @@ components:
               description: Internal ID of Customer
             - $ref: '#/components/schemas/Participant'
         beneficiary:
-          nullable: true
           description: Beneficiary feature must be enabled for the account.
           anyOf:
             - type: string
               description: Internal ID of customer
             - $ref: '#/components/schemas/Participant'
+            - type: 'null'
         issuedAt:
           type: string
           format: date-time
@@ -2173,8 +2242,7 @@ components:
             May be provided in relative format, e.g. '+1 day'.
             Current date if not provided.
         paidAt:
-          nullable: true
-          type: string
+          type: [string, 'null']
           format: date-time
           description: |
             Date of payment that appears on the document.
@@ -2209,8 +2277,7 @@ components:
           description: ISO currency format.
           example: CZK
         bankAccountId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: KSUID of the InvoicingBankAccount to use as the supplier's bank account on the document.
         items:
           type: array
@@ -2225,11 +2292,11 @@ components:
         id:
           type: string
           description: Internal ID of the created Document. Currently it is sequence number of the Document.
-          example: 20230001
+          example: "20230001"
         symbol:
           type: string
           description: Sequence number of the created Document.
-          example: 20230001
+          example: "20230001"
         uuid:
           type: string
           format: uuid
@@ -2380,14 +2447,11 @@ components:
         slug:
           type: string
         parentId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         position:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         createdAt:
           type: string
           format: date-time
@@ -2410,18 +2474,15 @@ components:
         name:
           type: string
         parent:
-          type: string
-          nullable: true
+          type: [string, 'null']
         children:
           type: array
           items:
             type: string
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         position:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
       required:
         - name
 
@@ -2431,14 +2492,11 @@ components:
         name:
           type: string
         parentId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         position:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
 
     Product:
       type: object
@@ -2453,18 +2511,15 @@ components:
         slug:
           type: string
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
         mainCategoryId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         secondaryCategoryIds:
           type: array
           items:
             type: string
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         isActive:
           type: boolean
         createdAt:
@@ -2492,15 +2547,13 @@ components:
         name:
           type: string
         mainCategoryId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         secondaryCategoryIds:
           type: array
           items:
             type: string
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         isActive:
           type: boolean
         productType:
@@ -2519,15 +2572,13 @@ components:
         name:
           type: string
         mainCategoryId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         secondaryCategoryIds:
           type: array
           items:
             type: string
         externalId:
-          type: string
-          nullable: true
+          type: [string, 'null']
         isActive:
           type: boolean
         productType:
@@ -2546,13 +2597,11 @@ components:
           format: date-time
           description: Date from which the price is valid.
         validTo:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date until which the price is valid.
         note:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Internal note about the price change.
       required:
         - price
@@ -2569,13 +2618,11 @@ components:
         price:
           $ref: '#/components/schemas/Money'
         validFrom:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date from which the price is valid. Sets to current date if null.
         note:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Internal note about the price change.
       required:
         - price
@@ -2607,9 +2654,8 @@ components:
           description: Date since when the tax rate is valid
           example: 2024-01-01
         validUntil:
-          type: string
+          type: [string, 'null']
           format: date
-          nullable: true
           description: Date until when the tax rate is valid
           example: 2024-12-31
       required:
@@ -2637,30 +2683,25 @@ components:
           description: User-friendly label for the bank account
           example: Fio CZK
         accountNumber:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Account number (without bank code)
           example: '1234567890'
         bankCode:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Bank code
           example: '2010'
         iban:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: IBAN
           example: CZ6508000000001234567890
         bic:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: BIC/SWIFT code
         isDefault:
           type: boolean
           description: Whether this is the default bank account for the tenant
         sourceBankAccountId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: ID of the linked synced BankAccount entity (Fio/Moneta/Raiffeisen), if any
 
     CreateInvoicingBankAccountRequest:
@@ -2672,23 +2713,18 @@ components:
           type: string
           description: User-friendly label
         accountNumber:
-          type: string
-          nullable: true
+          type: [string, 'null']
         bankCode:
-          type: string
-          nullable: true
+          type: [string, 'null']
         iban:
-          type: string
-          nullable: true
+          type: [string, 'null']
         bic:
-          type: string
-          nullable: true
+          type: [string, 'null']
         isDefault:
           type: boolean
           default: false
         sourceBankAccountId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: If provided, bank account details are copied from the linked BankAccount entity.
 
     UpdateInvoicingBankAccountRequest:
@@ -2697,17 +2733,13 @@ components:
         name:
           type: string
         accountNumber:
-          type: string
-          nullable: true
+          type: [string, 'null']
         bankCode:
-          type: string
-          nullable: true
+          type: [string, 'null']
         iban:
-          type: string
-          nullable: true
+          type: [string, 'null']
         bic:
-          type: string
-          nullable: true
+          type: [string, 'null']
         isDefault:
           type: boolean
 
@@ -2724,8 +2756,7 @@ components:
           type: string
           example: '1234567890'
         accountNumberPrefix:
-          type: string
-          nullable: true
+          type: [string, 'null']
         bankCode:
           type: string
           example: '5500'
@@ -2733,16 +2764,13 @@ components:
           type: string
           example: CZ6555000000001234567890
         bankBicCode:
-          type: string
-          nullable: true
+          type: [string, 'null']
         friendlyName:
-          type: string
-          nullable: true
+          type: [string, 'null']
         accountTypeId:
           type: string
         mainCurrency:
-          type: string
-          nullable: true
+          type: [string, 'null']
           example: CZK
 
     SyncedBankAccount:
@@ -2765,23 +2793,20 @@ components:
               type: string
               example: CZ6555000000001234567890
             bic:
-              type: string
-              nullable: true
+              type: [string, 'null']
         name:
           type: string
           description: Friendly name of the bank account.
         balance:
-          type: number
-          nullable: true
+          type: [number, 'null']
           description: Current balance of the account.
         currency:
           type: string
           description: ISO currency code.
           example: CZK
         lastFetch:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Date of the last successful transaction fetch.
         fetchEnabled:
           type: string
@@ -2814,19 +2839,16 @@ components:
       schema:
         type: integer
         description: Month in non-zerofilled format
-        example:
-          - 3
-          - 12
+        example: 3
     limit:
       name: limit
       in: query
       required: false
       schema:
-        type: integer
+        type: [integer, 'null']
         default: null
         description: Number of items to return
         example: 10
-        nullable: true
     offset:
       name: offset
       in: query
@@ -2864,8 +2886,7 @@ components:
                         format: date-time
                         description: Date the receipt/invoice was received
                       taxableAt:
-                        nullable: true
-                        type: string
+                        type: [string, 'null']
                         format: date-time
                         description: |
                           Date of VAT applicability.
@@ -2892,12 +2913,10 @@ components:
               - type: object
                 properties:
                   order:
-                    type: string
-                    nullable: true
+                    type: [string, 'null']
                     description: Reference to Internal Order ID.
                   taxableAt:
-                    nullable: true
-                    type: string
+                    type: [string, 'null']
                     format: date-time
                     description: |
                       Date of VAT applicability.
@@ -2954,12 +2973,10 @@ components:
               - type: object
                 properties:
                   order:
-                    type: string
-                    nullable: true
+                    type: [string, 'null']
                     description: Reference to Internal Order ID.
                   taxableAt:
-                    nullable: true
-                    type: string
+                    type: [string, 'null']
                     format: date-time
                     description: |
                       Date of VAT applicability.
@@ -3004,8 +3021,7 @@ components:
                         - $ref: "#/components/schemas/Money"
                       description: Price of a single unit of the item.
                     taxRate:
-                      type: integer
-                      nullable: true
+                      type: [integer, 'null']
                       description: Tax rate applied on the item or null if VAT is not applicable.
                     productId:
                       type: string
@@ -3055,6 +3071,8 @@ components:
 webhooks:
   invoicePaid:
     post:
+      summary: Invoice paid event payload
+      operationId: "invoicePaidWebhook"
       requestBody:
         content:
           application/json:
@@ -3075,16 +3093,16 @@ webhooks:
                       type: string
                       description: Symbol of the paid Invoice
                     orderSymbol:
-                      type: string
-                      nullable: true
+                      type: [string, 'null']
                       description: Symbol of the associated Order
                     customSymbol:
-                      type: string
-                      nullable: true
+                      type: [string, 'null']
                     dateOfPayment:
                       type: string
                       format: date-time
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: Indicate that the data was received successfully
 
