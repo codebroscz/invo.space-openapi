@@ -988,6 +988,23 @@ paths:
         '204':
           description: Settings were updated successfully
 
+  /settings/bank-notifications:
+    get:
+      tags:
+        - settings
+      summary: Get bank email notification settings
+      description: Returns the forwarding email address and list of supported banks for automatic payment pairing from bank notification emails.
+      operationId: getBankNotificationSettings
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: Bank notification settings were retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankNotificationSettings'
+
   /categories:
     get:
       tags:
@@ -2566,6 +2583,24 @@ components:
             - beneficiary
             - multiCurrency
             - bank
+
+    BankNotificationSettings:
+      type: object
+      required:
+        - forwardingEmail
+        - supportedBanks
+      properties:
+        forwardingEmail:
+          type: [string, 'null']
+          description: Email address to forward bank payment notifications to. Null when not configured on the server.
+          example: a1b2c3d4@platby.invo.space
+        supportedBanks:
+          type: array
+          items:
+            type: string
+          description: Banks whose payment notification emails are supported.
+          example:
+            - Air bank
 
     CreateSimpleExpenseRequest:
       type: object
