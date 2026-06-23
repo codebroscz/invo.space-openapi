@@ -692,6 +692,9 @@ paths:
                         - Qr
                     minItems: 1
                     description: List of enabled payment types for the cash register. At least one must be provided.
+                  warehouseId:
+                    type: [string, 'null']
+                    description: Warehouse used for stock deduction and returns from this cash register (wh_ prefixed KSUID).
 
         default:
           $ref: '#/components/responses/ErrorResponse'
@@ -749,6 +752,9 @@ paths:
                       - Qr
                   minItems: 1
                   description: List of enabled payment types for the cash register. At least one must be provided.
+                warehouseId:
+                  type: [string, 'null']
+                  description: Warehouse used for stock deduction and returns from this cash register (wh_ prefixed KSUID).
               required:
                 - cashRegisterIdentifier
                 - amountThenPrice
@@ -888,6 +894,7 @@ paths:
       tags:
         - receipts
       summary: Delete Receipt
+      description: Soft-deletes the receipt and returns stock to the warehouse by reversing recorded sale stock moves (reason `sale_return`). Idempotent when the receipt is already deleted.
       operationId: "deleteReceipt"
       parameters:
         - name: id
@@ -1252,7 +1259,7 @@ paths:
         Returns a paginated list of SKUs, optionally filtered by product.
         When filtered by productId, returns the system SKU only if it is the sole SKU for that product;
         otherwise user-defined SKUs are returned and the system SKU is excluded.
-        Without productId, system SKUs are excluded from the account-wide list.
+        Without productId, the list contains all user-defined SKUs plus the system SKU of any product that has no user-defined SKU.
       operationId: listSkus
       parameters:
         - in: query
@@ -1261,6 +1268,15 @@ paths:
             type: string
           required: false
           description: Filter SKUs by catalog product ID.
+        - in: query
+          name: includeSystem
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: |
+            When filtering by productId, include the hidden system SKU alongside user-defined SKUs.
+            Defaults to false (system SKU is excluded when user-defined SKUs exist).
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/orderBy'
@@ -1621,6 +1637,169 @@ paths:
           description: Invalid ID format
         '404':
           description: Not found
+    patch:
+      tags:
+        - warehouse
+      summary: Update stock item (partial)
+      operationId: patchStockItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockItemPatch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItem'
+        '400':
+          description: Invalid request
+        '404':
+          description: Not found
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /moves:
+    get:
+      tags:
+        - warehouse
+      summary: List stock moves
+      description: Returns a paginated list of stock moves, optionally filtered by stock item, warehouse, or type.
+      operationId: listStockMoves
+      parameters:
+        - in: query
+          name: stockItemId
+          schema:
+            type: string
+          required: false
+          description: Filter by stock item ID (si_ prefixed KSUID).
+        - in: query
+          name: warehouseId
+          schema:
+            type: string
+          required: false
+          description: Filter by warehouse ID (wh_ prefixed KSUID).
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [receipt, issue, adjustment, transfer_in, transfer_out]
+          required: false
+          description: Filter by move type.
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockMove'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /moves/{sku}:
+    parameters:
+      - in: path
+        name: sku
+        required: true
+        schema:
+          type: string
+          description: SKU ID (sku_ prefixed KSUID).
+    get:
+      tags:
+        - warehouse
+      summary: List stock moves for a SKU
+      operationId: listSkuStockMoves
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockMove'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - warehouse
+      summary: Record a stock move for a SKU
+      operationId: createSkuStockMove
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMoveCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockMove'
+        '400':
+          description: Invalid request
+        '404':
+          description: Not found
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /stock-transfers:
+    post:
+      tags:
+        - warehouse
+      summary: Transfer stock between warehouses
+      operationId: createStockTransfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockTransferCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockMove'
+                  transferId:
+                    type: string
+                    description: Shared transfer identifier linking the out and in moves.
+        '400':
+          description: Invalid request
+        '404':
+          description: Not found
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
   /tax-rates:
     get:
@@ -2263,6 +2442,10 @@ components:
         description:
           type: string
           description: Description of the item
+        skuId:
+          type: string
+          nullable: true
+          description: Optional SKU reference for stock-tracked catalog items
         unitPriceTaxFree:
           description: Price excluding VAT of a single unit of the item. Is the same as unit unitPrice if no VAT is defined.
           allOf: # todo this nest is a hack for openapi 3.0, see https://github.com/OAI/OpenAPI-Specification/issues/1514#issuecomment-1386613645
@@ -2310,6 +2493,10 @@ components:
         description:
           type: string
           description: Description of the item
+        skuId:
+          type: string
+          nullable: true
+          description: Optional SKU reference for stock-tracked catalog items
         unitPrice:
           description: Price of a single unit of the item.
           allOf: # todo this nest is a hack for openapi 3.0, see https://github.com/OAI/OpenAPI-Specification/issues/1514#issuecomment-1386613645
@@ -2846,6 +3033,28 @@ components:
               $ref: '#/components/schemas/Product/properties/id'
             name:
               $ref: '#/components/schemas/Product/properties/name'
+        skuId:
+          type: string
+          description: Internal ID of the SKU associated with the receipt line.
+        sku:
+          type: object
+          description: Resolved SKU details when skuId is set and the SKU exists.
+          properties:
+            id:
+              type: string
+              description: KSUID with sku_ prefix.
+            name:
+              type: string
+              description: Display name of the SKU variant.
+            code:
+              type: string
+              description: Unique SKU code.
+            isSystem:
+              type: boolean
+              description: True for the auto-created hidden SKU.
+        label:
+          type: string
+          description: Display label combining product and variant name when applicable.
         sale:
           type: object
           description: Optional sale applied to the receipt line. When present, the object MUST contain both `type` and `value`.
@@ -2895,6 +3104,10 @@ components:
             - Cash
             - Card
             - Qr
+        warehouseId:
+          type: string
+          nullable: true
+          description: Warehouse from which stock was deducted for this sale (wh_ prefixed KSUID). Defaults to the cash register settings warehouse when omitted.
         receiptLines:
           type: array
           items:
@@ -3095,6 +3308,12 @@ components:
         code:
           type: string
           description: Unique SKU code (the sellable unit identifier).
+        name:
+          type: string
+          description: Display name of the SKU variant.
+        slug:
+          type: string
+          description: URL-friendly slug derived from the SKU name.
         productId:
           type: string
           description: Reference to the catalog Product ID (pr_ prefixed KSUID).
@@ -3119,6 +3338,8 @@ components:
           format: date-time
       required:
         - id
+        - name
+        - slug
         - code
         - productId
         - isBundle
@@ -3128,9 +3349,12 @@ components:
     SkuCreate:
       type: object
       properties:
+        name:
+          type: string
+          description: Display name of the SKU variant.
         code:
           type: string
-          description: Unique SKU code.
+          description: Unique SKU code. Defaults to {productSlug}-{skuSlug} when omitted.
         productId:
           type: string
           description: Catalog Product ID (pr_ prefixed KSUID).
@@ -3146,12 +3370,15 @@ components:
           items:
             $ref: '#/components/schemas/BundleItem'
       required:
-        - code
+        - name
         - productId
 
     SkuPatch:
       type: object
       properties:
+        name:
+          type: string
+          description: Display name of the SKU variant.
         code:
           type: string
         isActive:
@@ -3233,6 +3460,8 @@ components:
           description: Short warehouse identifier, e.g. "WH-01".
         isActive:
           type: boolean
+        isDefault:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -3251,6 +3480,9 @@ components:
         isActive:
           type: boolean
           default: true
+        isDefault:
+          type: boolean
+          default: false
       required:
         - name
         - code
@@ -3264,20 +3496,34 @@ components:
           type: string
         isActive:
           type: boolean
+        isDefault:
+          type: boolean
 
     StockItem:
       type: object
       properties:
         id:
           type: string
-          description: KSUID with ip_ prefix.
-          example: ip_2udYHpoPWQeAazs1GOWA7BEZxUc
+          description: KSUID with si_ prefix.
+          example: si_2udYHpoPWQeAazs1GOWA7BEZxUc
         skuId:
           type: string
           description: Reference to SKU ID (sku_ prefixed KSUID).
+        skuCode:
+          type: [string, 'null']
+          description: SKU code (read-only, enriched).
+        skuName:
+          type: [string, 'null']
+          description: SKU name (read-only, enriched).
         warehouseId:
           type: string
           description: Reference to Warehouse ID (wh_ prefixed KSUID).
+        warehouseName:
+          type: string
+          description: Warehouse name (read-only, enriched).
+        warehouseCode:
+          type: string
+          description: Warehouse code (read-only, enriched).
         quantityOnHand:
           type: integer
           description: Physical stock count.
@@ -3287,6 +3533,13 @@ components:
         quantityAvailable:
           type: integer
           description: "Computed: quantityOnHand - quantityReserved."
+        trackingMode:
+          type: string
+          enum: [tracked, unlimited]
+          description: Stock tracking mode. Unlimited items never block sales; adding stock switches to tracked.
+        isUnlimited:
+          type: boolean
+          description: Whether stock availability is treated as infinite.
         batchNumber:
           type: [string, 'null']
         binLocation:
@@ -3301,6 +3554,122 @@ components:
         - quantityOnHand
         - quantityReserved
         - quantityAvailable
+        - trackingMode
+        - isUnlimited
+
+    StockItemPatch:
+      type: object
+      properties:
+        binLocation:
+          type: [string, 'null']
+          description: Storage bin location, or null to clear.
+
+    StockMove:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with sm_ prefix.
+          example: sm_2udYHpoPWQeAazs1GOWA7BEZxUc
+        stockItemId:
+          type: string
+          description: Reference to StockItem ID (si_ prefixed KSUID).
+        type:
+          type: string
+          enum: [receipt, issue, adjustment, transfer_in, transfer_out]
+        quantityDelta:
+          type: integer
+          description: Signed quantity change applied by this move.
+        quantityAfter:
+          type: integer
+          description: Quantity on hand after this move.
+        reason:
+          type: [string, 'null']
+          description: "Move reason. System values include `opening_balance`, `sale` (POS issue), and `sale_return` (stock restored on receipt soft-delete/refund)."
+        note:
+          type: [string, 'null']
+        reference:
+          type: [string, 'null']
+          description: Optional external document reference.
+        transferId:
+          type: [string, 'null']
+          description: Shared identifier for linked transfer moves.
+        createdAt:
+          type: string
+          format: date-time
+        skuId:
+          type: string
+        skuCode:
+          type: [string, 'null']
+        skuName:
+          type: [string, 'null']
+        warehouseId:
+          type: string
+        warehouseName:
+          type: string
+        warehouseCode:
+          type: string
+        batchNumber:
+          type: [string, 'null']
+      required:
+        - id
+        - stockItemId
+        - type
+        - quantityDelta
+        - quantityAfter
+        - skuId
+        - warehouseId
+
+    StockMoveCreate:
+      type: object
+      properties:
+        warehouseId:
+          type: string
+          description: Warehouse ID (wh_ prefixed KSUID).
+        batchNumber:
+          type: [string, 'null']
+        type:
+          type: string
+          enum: [receipt, issue, adjustment]
+          description: Move type. Receipt and issue use positive quantity; adjustment uses signed quantity.
+        quantity:
+          type: integer
+          description: Quantity for receipt/issue (positive) or signed delta for adjustment.
+        reason:
+          type: [string, 'null']
+        note:
+          type: [string, 'null']
+        reference:
+          type: [string, 'null']
+      required:
+        - warehouseId
+        - type
+        - quantity
+
+    StockTransferCreate:
+      type: object
+      properties:
+        skuId:
+          type: string
+          description: SKU ID (sku_ prefixed KSUID).
+        fromWarehouseId:
+          type: string
+          description: Source warehouse ID (wh_ prefixed KSUID).
+        toWarehouseId:
+          type: string
+          description: Destination warehouse ID (wh_ prefixed KSUID).
+        quantity:
+          type: integer
+          description: Quantity to transfer (positive).
+        batchNumber:
+          type: [string, 'null']
+        note:
+          type: [string, 'null']
+      required:
+        - skuId
+        - fromWarehouseId
+        - toWarehouseId
+        - quantity
 
     StockItemCreate:
       type: object
@@ -3709,6 +4078,10 @@ components:
                   - Cash
                   - Card
                   - Qr
+              warehouseId:
+                type: string
+                nullable: true
+                description: Warehouse from which stock should be deducted (wh_ prefixed KSUID). When omitted, the cash register settings warehouse is used.
               receiptLines:
                 type: array
                 minItems: 1
@@ -3718,7 +4091,7 @@ components:
                     amount:
                       type: number
                       format: float
-                      description: Quantity of the item
+                      description: Quantity of the item. Fractional values are accepted; stock is deducted using round(amount) as whole units.
                     unitPrice:
                       allOf:
                         - $ref: "#/components/schemas/Money"
@@ -3729,6 +4102,9 @@ components:
                     productId:
                       type: string
                       description: Internal ID of the product associated with the receipt line.
+                    skuId:
+                      type: string
+                      description: Internal ID of the SKU associated with the receipt line.
                     sale:
                       type: object
                       description: Optional sale applied to the receipt line. When present, the object MUST contain both `type` and `value`.
