@@ -995,6 +995,42 @@ paths:
         '204':
           description: Settings were updated successfully
 
+  /settings/features:
+    patch:
+      tags:
+        - settings
+      summary: Update owner-managed account features
+      description: Enables or disables owner-manageable features (cashRegistry, catalog, warehouse) for the authenticated user's account. Only the account owner can call this endpoint.
+      operationId: updateAccountFeatures
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - features
+              properties:
+                features:
+                  type: array
+                  description: List of enabled feature keys. Omitted owner-manageable features are disabled.
+                  items:
+                    type: string
+                    enum:
+                      - cashRegistry
+                      - catalog
+                      - warehouse
+                  example:
+                    - cashRegistry
+                    - catalog
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '204':
+          description: Features were updated successfully
+
   /settings/bank-notifications:
     get:
       tags:
