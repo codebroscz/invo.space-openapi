@@ -1879,6 +1879,49 @@ paths:
         '404':
           $ref: '#/components/responses/ErrorResponse'
 
+  /bank/{bankAccountId}:
+    post:
+      tags:
+        - bank
+      summary: Update bank account
+      operationId: updateBankAccount
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ksuid
+            description: KSUID of the bank account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fetchEnabled:
+                  type: string
+                  enum:
+                    - enabled
+                    - disabled
+                  description: Whether fetching of transactions is enabled
+                balance:
+                  type: number
+                  format: float
+                  description: Current balance in major currency units
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
   /bank-accounts:
     get:
       tags:
@@ -2104,6 +2147,116 @@ paths:
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
+  /erste-bank:
+    get:
+      tags:
+        - erste-bank
+      summary: Get Erste Bank integration status
+      description: Returns connection status, available accounts from Erste API, and already tracked (known) accounts.
+      operationId: "getErsteBankStatus"
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: Integration status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      credentials:
+                        type: boolean
+                        description: Whether OAuth credentials are configured.
+                      connection:
+                        type: string
+                        enum:
+                          - success
+                          - failed
+                          - n/a
+                        description: Result of the connection test. `n/a` when no credentials are configured.
+                      availableAccounts:
+                        type: array
+                        description: Accounts available in the Erste API. Empty if credentials are missing or connection failed.
+                        items:
+                          $ref: '#/components/schemas/ErsteAvailableAccount'
+                      knownAccounts:
+                        type: array
+                        description: Account numbers already tracked in the system.
+                        items:
+                          type: string
+                          example: '1234567890'
+    delete:
+      tags:
+        - erste-bank
+      summary: Disconnect Erste Bank integration
+      description: Removes stored OAuth credentials for the Erste Bank integration.
+      operationId: "disconnectErsteBank"
+      responses:
+        '204':
+          description: Credentials removed successfully
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      tags:
+        - erste-bank
+      summary: Start Erste Bank OAuth connection
+      description: Returns the Erste / Česká spořitelna authorization URL. The client must redirect the browser to this URL to complete OAuth.
+      operationId: "initErsteBankConnection"
+      responses:
+        '200':
+          description: Authorization URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - redirectUrl
+                    properties:
+                      redirectUrl:
+                        type: string
+                        format: uri
+                        description: Erste authorization URL to open in the browser.
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /erste-bank/accounts/{accountId}:
+    post:
+      tags:
+        - erste-bank
+      summary: Track an Erste bank account
+      description: Starts tracking an Erste bank account by its account ID. The account must exist in the Erste API.
+      operationId: "trackErsteBankAccount"
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ID of the account in the Erste API.
+      responses:
+        '200':
+          description: Account was tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SyncedBankAccount'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
   /webhooks:
     post:
       tags:
@@ -2242,6 +2395,10 @@ components:
           type: number
           format: float
           description: Balance of the bank account
+        balanceSetAt:
+          type: [string, 'null']
+          format: date-time
+          description: Date and time when the balance was manually set
         lastFetch:
           type: string
           format: date-time
@@ -3766,7 +3923,7 @@ components:
           description: Whether this is the default bank account for the tenant
         sourceBankAccountId:
           type: [string, 'null']
-          description: ID of the linked synced BankAccount entity (Fio/Moneta/Raiffeisen), if any
+          description: ID of the linked synced BankAccount entity (Fio/Moneta/Raiffeisen/Erste), if any
 
     CreateInvoicingBankAccountRequest:
       type: object
@@ -3827,6 +3984,35 @@ components:
         iban:
           type: string
           example: CZ6555000000001234567890
+        bankBicCode:
+          type: [string, 'null']
+        friendlyName:
+          type: [string, 'null']
+        accountTypeId:
+          type: string
+        mainCurrency:
+          type: [string, 'null']
+          example: CZK
+
+    ErsteAvailableAccount:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: Resource ID of the account in the Erste API.
+        accountName:
+          type: string
+        accountNumber:
+          type: string
+          example: '1234567890'
+        accountNumberPrefix:
+          type: [string, 'null']
+        bankCode:
+          type: string
+          example: '0800'
+        iban:
+          type: string
+          example: CZ6508000000001234567890
         bankBicCode:
           type: [string, 'null']
         friendlyName:
