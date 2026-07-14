@@ -960,6 +960,154 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /eet:
+    get:
+      tags:
+        - eet
+      summary: Get EET status and settings
+      operationId: getEet
+      description: Returns EET configuration status, settings, certificate info, and deadline warnings for Czech accounts.
+      responses:
+        '200':
+          description: EET status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EetStatus'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags:
+        - eet
+      summary: Configure EET settings
+      operationId: configureEet
+      description: Replaces the EET settings. Available only for Czech accounts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureEetSettingsRequest'
+      responses:
+        '200':
+          description: EET settings saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EetStatus'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /eet-certificates:
+    post:
+      tags:
+        - eet
+      summary: Upload EET certificate
+      operationId: uploadEetCertificate
+      description: Uploads a PKCS#12 certificate for EET communication. Available only for Czech accounts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadEetCertificateRequest'
+      responses:
+        '204':
+          description: Certificate saved successfully
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /eet-certificates/{environment}:
+    patch:
+      tags:
+        - eet
+      summary: Renew EET certificate
+      operationId: renewEetCertificate
+      description: Initiates automated certificate renewal via CAEET API for the certificate of the given environment.
+      parameters:
+        - name: environment
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [playground, test, production]
+      responses:
+        '200':
+          description: Certificate renewed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EetCertificateInfo'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /eet-submissions:
+    get:
+      tags:
+        - eet
+      summary: List EET submissions
+      operationId: getEetSubmissions
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter submissions by sale date (YYYY-MM-DD)
+        - name: receiptId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter submissions by receipt UUID
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        '200':
+          description: EET submissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EetSubmission'
+                  total:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /eet-submissions/{receiptId}:
+    post:
+      tags:
+        - eet
+      summary: Submit or resubmit a receipt to EET
+      operationId: createEetSubmission
+      description: Submits the given receipt to EET. If a submission already exists for the receipt, it is retried.
+      parameters:
+        - name: receiptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Receipt UUID
+      responses:
+        '200':
+          description: Receipt submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EetSubmission'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
   /notifications:
     get:
       tags:
@@ -3352,6 +3500,140 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReceiptLine'
+
+    EetStatus:
+      type: object
+      properties:
+        isCzech:
+          type: boolean
+        enabled:
+          type: boolean
+        environment:
+          type: string
+          enum: [playground, test, production]
+        verificationMode:
+          type: boolean
+        idProvozovny:
+          type: integer
+          nullable: true
+        configured:
+          type: boolean
+        setupRequired:
+          type: boolean
+        deadlineWarning:
+          type: boolean
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/EetCertificateInfo'
+
+    EetCertificateInfo:
+      type: object
+      properties:
+        eic:
+          type: string
+          example: CZ00000019
+        serialNumber:
+          type: string
+        validFrom:
+          type: string
+          format: date-time
+        validTo:
+          type: string
+          format: date-time
+        environment:
+          type: string
+          enum: [playground, test, production]
+        isValid:
+          type: boolean
+        expiresSoon:
+          type: boolean
+        daysUntilExpiry:
+          type: integer
+
+    UploadEetCertificateRequest:
+      type: object
+      required:
+        - certificate
+        - password
+      properties:
+        certificate:
+          type: string
+          description: Base64-encoded PKCS#12 certificate
+        password:
+          type: string
+          description: Password for the PKCS#12 certificate
+        environment:
+          type: string
+          enum: [playground, test, production]
+          default: playground
+
+    ConfigureEetSettingsRequest:
+      type: object
+      required:
+        - enabled
+        - environment
+        - verificationMode
+        - idProvozovny
+      properties:
+        enabled:
+          type: boolean
+        environment:
+          type: string
+          enum: [playground, test, production]
+        verificationMode:
+          type: boolean
+        idProvozovny:
+          type: integer
+          minimum: 1
+          maximum: 999999999
+
+    EetSubmission:
+      type: object
+      properties:
+        id:
+          type: integer
+        receiptId:
+          type: string
+          format: uuid
+        messageUuid:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, confirmed, rejected, offline]
+        fik:
+          type: string
+          nullable: true
+          description: Fiscal identification code (FIK) from EET
+        datTrzby:
+          type: string
+          format: date-time
+        celkTrzba:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        receivedAt:
+          type: string
+          format: date-time
+          nullable: true
+        prvniZaslani:
+          type: boolean
+        attempts:
+          type: integer
+        errorCode:
+          type: integer
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        warnings:
+          type: array
+          items:
+            type: integer
+          nullable: true
 
     SummaryRow:
       type: object
