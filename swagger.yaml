@@ -1183,6 +1183,17 @@ paths:
                   example:
                     - "EUR"
                     - "USD"
+                eshopPriceMode:
+                  type: string
+                  enum:
+                    - live
+                    - snapshot
+                addressRequirement:
+                  type: string
+                  enum:
+                    - always
+                    - whenAddressDelivery
+                    - never
 
       responses:
         '400':
@@ -2552,6 +2563,268 @@ paths:
         '409':
           $ref: '#/components/responses/ErrorResponse'
 
+  /delivery-methods:
+    get:
+      summary: List delivery methods
+      operationId: listDeliveryMethods
+      tags: [Eshop]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeliveryMethod'
+                  total:
+                    type: integer
+
+  /delivery-methods/{type}:
+    patch:
+      summary: Update delivery method
+      operationId: updateDeliveryMethod
+      tags: [Eshop]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [personalPickup, ceskaPosta, balikovna, ppl, zasilkovna]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchDeliveryMethod'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryMethod'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /pickup-points:
+    get:
+      summary: List personal pickup points
+      operationId: listPickupPoints
+      tags: [Eshop]
+    post:
+      summary: Create personal pickup point
+      operationId: createPickupPoint
+      tags: [Eshop]
+
+  /carrier-pickup-points:
+    get:
+      summary: List carrier pickup points
+      operationId: listCarrierPickupPoints
+      tags: [Eshop]
+
+  /payment-methods:
+    get:
+      summary: List payment methods
+      operationId: listPaymentMethods
+      tags: [Eshop]
+    patch:
+      summary: Update payment method
+      operationId: updatePaymentMethod
+      tags: [Eshop]
+
+  /storefront-tokens:
+    get:
+      summary: List storefront tokens
+      operationId: listStorefrontTokens
+      tags: [Eshop]
+    post:
+      summary: Create storefront token
+      operationId: createStorefrontToken
+      tags: [Eshop]
+
+  /api/storefront/v1/catalog:
+    get:
+      summary: Storefront catalog tree
+      operationId: storefrontCatalog
+      tags: [Storefront]
+
+  /api/storefront/v1/categories:
+    get:
+      summary: Storefront categories
+      operationId: storefrontCategories
+      tags: [Storefront]
+
+  /api/storefront/v1/products:
+    get:
+      summary: Storefront products
+      operationId: storefrontProducts
+      tags: [Storefront]
+
+  /api/storefront/v1/products/{id}:
+    get:
+      summary: Storefront product detail
+      operationId: storefrontProductDetail
+      tags: [Storefront]
+
+  /api/storefront/v1/skus:
+    get:
+      summary: Storefront SKUs
+      operationId: storefrontSkus
+      tags: [Storefront]
+
+  /api/storefront/v1/delivery-methods:
+    get:
+      summary: Storefront delivery methods
+      operationId: storefrontDeliveryMethods
+      tags: [Storefront]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeliveryMethod'
+                  total:
+                    type: integer
+                description: >
+                  For zasilkovna, zasilkovnaApiKey is returned only when
+                  zasilkovnaPickupSelector is widget and a merchant key is set.
+
+  /api/storefront/v1/delivery-methods/{type}/pickup-points:
+    get:
+      summary: Storefront pickup points for delivery method
+      operationId: storefrontDeliveryPickupPoints
+      tags: [Storefront]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [personalPickup, balikovna, ppl, zasilkovna]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: nearLat
+          in: query
+          description: >
+            Latitude for distance sort and radius filter (carrier points only).
+            Must be provided together with nearLng.
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: nearLng
+          in: query
+          description: Longitude for distance sort and radius filter (carrier points only).
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: radiusKm
+          in: query
+          description: Max distance in km when nearLat/nearLng are set. Default 20, max 100.
+          schema:
+            type: number
+            format: double
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Pickup points for the delivery method
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/PickupPoint'
+                        - $ref: '#/components/schemas/CarrierPickupPoint'
+                  total:
+                    type: integer
+
+  /api/storefront/v1/payment-methods:
+    get:
+      summary: Storefront payment methods
+      operationId: storefrontPaymentMethods
+      tags: [Storefront]
+
+  /api/storefront/v1/carts:
+    post:
+      summary: Create cart
+      operationId: storefrontCreateCart
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}:
+    get:
+      summary: Get cart
+      operationId: storefrontGetCart
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}/items:
+    post:
+      summary: Add cart item
+      operationId: storefrontAddCartItem
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}/customer:
+    patch:
+      summary: Set cart customer
+      operationId: storefrontSetCartCustomer
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}/delivery:
+    patch:
+      summary: Set cart delivery
+      operationId: storefrontSetCartDelivery
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}/payment:
+    patch:
+      summary: Set cart payment
+      operationId: storefrontSetCartPayment
+      tags: [Storefront]
+
+  /api/storefront/v1/carts/{id}/promotion:
+    post:
+      summary: Promote cart to order
+      operationId: storefrontPromoteCart
+      tags: [Storefront]
+
+  /api/storefront/v1/orders/{id}/card-payment:
+    post:
+      summary: Initiate card payment
+      operationId: storefrontCardPayment
+      tags: [Storefront]
+
+  /api/storefront/v1/orders/card-payment/callback:
+    post:
+      summary: Card payment callback
+      operationId: storefrontCardPaymentCallback
+      tags: [Storefront]
+
 components:
   schemas:
     Error:
@@ -2574,6 +2847,120 @@ components:
         detail:
           type: string
           description: Request specific description of the error.
+
+    DeliveryMethod:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [personalPickup, ceskaPosta, balikovna, ppl, zasilkovna]
+        isEnabled:
+          type: boolean
+        supportedProductTypes:
+          type: array
+          items:
+            type: string
+        prices:
+          type: array
+          items:
+            type: object
+        allowedPaymentMethods:
+          type: array
+          items:
+            type: string
+        zasilkovnaPickupSelector:
+          type: [string, 'null']
+          enum: [widget, feed]
+          description: Pickup point UI mode for Zásilkovna. Null for other delivery types.
+        zasilkovnaApiKey:
+          type: [string, 'null']
+          description: >
+            Per-account Packeta API key for widget mode and future Packeta API calls.
+            Not the platform sync key. On storefront responses, returned only when
+            selector is widget and a key is configured.
+        balikovnaPickupSelector:
+          type: [string, 'null']
+          enum: [widget, feed]
+          description: Pickup point UI mode for Balíkovna. Null for other delivery types.
+
+    PatchDeliveryMethod:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        supportedProductTypes:
+          type: array
+          items:
+            type: string
+        prices:
+          type: object
+          additionalProperties: true
+        allowedPaymentMethods:
+          type: array
+          items:
+            type: string
+        zasilkovnaPickupSelector:
+          type: string
+          enum: [widget, feed]
+        zasilkovnaApiKey:
+          type: [string, 'null']
+          description: Merchant Packeta API key. Empty string clears the stored key.
+        balikovnaPickupSelector:
+          type: string
+          enum: [widget, feed]
+
+    PickupPoint:
+      type: object
+      description: Account-owned personal pickup point
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        note:
+          type: [string, 'null']
+        openingHours:
+          type: [string, 'null']
+        isActive:
+          type: boolean
+
+    CarrierPickupPoint:
+      type: object
+      description: Synced carrier pickup point (Zásilkovna, PPL, Balíkovna)
+      properties:
+        id:
+          type: string
+        provider:
+          type: string
+          enum: [balikovna, ppl, zasilkovna]
+        externalId:
+          type: string
+        name:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: [string, 'null']
+        longitude:
+          type: [string, 'null']
+        distanceKm:
+          type: number
+          format: double
+          description: Present when the request included nearLat/nearLng.
 
     Address:
       type: object
@@ -3149,6 +3536,19 @@ components:
           type: integer
           description: Year of registration of the account, used for determining what years are in year paginator.
           example: 2023
+        eshopPriceMode:
+          type: string
+          enum:
+            - live
+            - snapshot
+          description: How cart item prices are resolved when the cart is read or updated.
+        addressRequirement:
+          type: string
+          enum:
+            - always
+            - whenAddressDelivery
+            - never
+          description: When checkout requires a shipping address before promoting a cart to an order.
         features:
           type: array
           items:
