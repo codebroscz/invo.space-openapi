@@ -53,6 +53,53 @@ paths:
         '204':
           description: User account successfully created
 
+  /auth/verify:
+    post:
+      summary: "Resend verification e-mail"
+      operationId: "resendVerification"
+      description: |
+        Resends the account verification e-mail for an unverified account.
+        For unknown or already verified e-mails the endpoint responds with 204 without sending anything,
+        to prevent account enumeration.
+
+        Requests are throttled: after a verification e-mail is sent, another one can be requested
+        after the cooldown indicated by the `Retry-After` header (in seconds). Within the cooldown
+        the endpoint responds with 429 and error code 42902.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '204':
+          description: Verification e-mail sent (or silently ignored)
+          headers:
+            Retry-After:
+              description: Seconds until the verification e-mail can be requested again
+              schema:
+                type: integer
+                example: 120
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          description: Verification e-mail was requested too recently (error code 42902)
+          headers:
+            Retry-After:
+              description: Seconds until the verification e-mail can be requested again
+              schema:
+                type: integer
+                example: 87
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /auth/token:
     post:
       summary: "Get JWT token"
