@@ -99,6 +99,35 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+    patch:
+      summary: "Confirm verification e-mail"
+      operationId: "confirmVerification"
+      description: |
+        Confirms a user e-mail address with the token from the verification e-mail.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - token
+              properties:
+                email:
+                  type: string
+                  format: email
+                token:
+                  type: string
+      responses:
+        '204':
+          description: E-mail address verified
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
 
   /auth/token:
     post:
@@ -1365,6 +1394,224 @@ paths:
         '404':
           description: Not found
 
+  /variant-axes:
+    get:
+      tags:
+        - catalog
+      summary: List variant axes
+      operationId: "getVariantAxes"
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VariantAxis'
+                  total:
+                    type: integer
+
+    post:
+      tags:
+        - catalog
+      summary: Create variant axis
+      operationId: "createVariantAxis"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantAxisCreate'
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantAxis'
+
+  /variant-axes/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Variant axis KSUID with vax_ prefix
+    get:
+      tags:
+        - catalog
+      summary: Get variant axis by id
+      operationId: "getVariantAxis"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantAxis'
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+    patch:
+      tags:
+        - catalog
+      summary: Update variant axis (partial)
+      operationId: "patchVariantAxis"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantAxisPatch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantAxis'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Not found
+
+    delete:
+      tags:
+        - catalog
+      summary: Delete variant axis
+      operationId: "deleteVariantAxis"
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+  /parameters:
+    get:
+      tags:
+        - catalog
+      summary: List parameters
+      operationId: "getParameters"
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/orderBy'
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Parameter'
+                  total:
+                    type: integer
+
+    post:
+      tags:
+        - catalog
+      summary: Create parameter
+      operationId: "createParameter"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParameterCreate'
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parameter'
+
+  /parameters/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Parameter KSUID with prm_ prefix
+    get:
+      tags:
+        - catalog
+      summary: Get parameter by id
+      operationId: "getParameter"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parameter'
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
+    patch:
+      tags:
+        - catalog
+      summary: Update parameter (partial)
+      operationId: "patchParameter"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParameterPatch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parameter'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Not found
+
+    delete:
+      tags:
+        - catalog
+      summary: Delete parameter
+      operationId: "deleteParameter"
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Not found
+
   /products:
     get:
       tags:
@@ -1406,14 +1653,14 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductCreate'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '201':
           description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-        '409':
-          description: SKU already exists
 
   /products/{id}:
     parameters:
@@ -1472,14 +1719,14 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductPatch'
       responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
         '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-        '409':
-          description: SKU already exists
 
     delete:
       tags:
@@ -1491,6 +1738,111 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         '204':
           description: No Content
+
+  /products/{id}/variant-axes:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Product KSUID with pr_ prefix
+    put:
+      tags:
+        - catalog
+      summary: Assign variant axes to product
+      description: Replaces the product's assigned variant axes.
+      operationId: "assignProductVariantAxes"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignProductVariantAxes'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Product or variant axis not found
+
+  /products/{id}/parameters:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Product KSUID with pr_ prefix
+    put:
+      tags:
+        - catalog
+      summary: Assign parameters to product
+      description: Replaces the product's assigned parameters and descriptive values.
+      operationId: "assignProductParameters"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignProductParameters'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Product or parameter not found
+
+  /products/{id}/skus/generate:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Product KSUID with pr_ prefix
+    post:
+      tags:
+        - catalog
+      summary: Generate SKUs for product option combinations
+      description: |
+        Generates SKUs for the product's variant axes.
+        Use `all: true` to generate every combination, or provide explicit `combos` of variant value IDs.
+      operationId: "generateProductSkus"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateSkusRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sku'
+                  total:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Product not found
 
   /skus:
     get:
@@ -2081,11 +2433,25 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/BankAccount'
+                    type: object
+                    required:
+                      - accounts
+                      - balances
+                    properties:
+                      accounts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BankAccount'
+                      balances:
+                        type: object
+                        additionalProperties:
+                          $ref: '#/components/schemas/Money'
+                        description: Total balance per currency across all synced bank accounts
                   total:
                     type: integer
+                required:
+                  - data
+                  - total
 
   /bank/{bankAccountId}/transactions:
     get:
@@ -2101,6 +2467,8 @@ paths:
             type: string
             format: ksuid
             description: KSUID of the bank account
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         '200':
           description: OK
@@ -2835,6 +3203,231 @@ paths:
       operationId: storefrontCardPaymentCallback
       tags: [Storefront]
 
+  /admin/subscription-plans:
+    get:
+      tags:
+        - admin
+      summary: List active subscription plans
+      operationId: listAdminSubscriptionPlans
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubscriptionPlan'
+                  total:
+                    type: integer
+
+  /admin/accounts/{id}/subscriptions:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+    get:
+      tags:
+        - admin
+      summary: List subscriptions for account
+      operationId: listAccountSubscriptions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminSubscription'
+                  total:
+                    type: integer
+        '404':
+          description: Account not found
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - admin
+      summary: Create subscription for account
+      operationId: createAccountSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscription'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Account not found
+
+  /admin/accounts/{id}/subscriptions/{subscriptionId}/activate:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+      - in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+          description: Subscription KSUID
+    post:
+      tags:
+        - admin
+      summary: Activate subscription
+      operationId: activateAccountSubscription
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscription'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          description: Conflict
+
+  /admin/accounts/{id}/subscriptions/{subscriptionId}/revoke:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+      - in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+          description: Subscription KSUID
+    post:
+      tags:
+        - admin
+      summary: Revoke subscription
+      operationId: revokeAccountSubscription
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscription'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /admin/accounts/{id}/subscriptions/{subscriptionId}/prolong:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+      - in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+          description: Subscription KSUID
+    post:
+      tags:
+        - admin
+      summary: Prolong subscription
+      operationId: prolongAccountSubscription
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscription'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /admin/accounts/{id}/subscriptions/{subscriptionId}/payment-emails:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+      - in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+          description: Subscription KSUID
+    post:
+      tags:
+        - admin
+      summary: Send payment e-mail for subscription
+      operationId: sendAccountSubscriptionPaymentEmail
+      responses:
+        '204':
+          description: No content
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /admin/accounts/{id}/max-variant-axes:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Account KSUID
+    patch:
+      tags:
+        - admin
+      summary: Update max variant axes for account
+      description: Admin-only. Sets the maximum number of variant axes that can be assigned to products on the account.
+      operationId: "updateAccountMaxVariantAxes"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - maxVariantAxes
+              properties:
+                maxVariantAxes:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of variant axes per product.
+                  example: 3
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          description: Account not found
+
 components:
   schemas:
     Error:
@@ -2992,6 +3585,16 @@ components:
 
     BankAccount:
       type: object
+      required:
+        - id
+        - name
+        - bankAccount
+        - currency
+        - balance
+        - balanceSetAt
+        - lastFetch
+        - fetchEnabled
+        - fetchDisabledReason
       properties:
         id:
           type: string
@@ -3002,6 +3605,11 @@ components:
           description: Name of the bank account
         bankAccount:
           type: object
+          required:
+            - accountNumber
+            - bankCode
+            - iban
+            - bic
           properties:
             accountNumber:
               type: string
@@ -3010,25 +3618,24 @@ components:
               type: string
               description: Bank code of the bank account
             iban:
-              type: string
+              type: [string, 'null']
               description: IBAN of the bank account
             bic:
-              type: string
+              type: [string, 'null']
               description: BIC of the bank account
         currency:
           type: string
           description: ISO currency format.
           example: CZK
         balance:
-          type: number
-          format: float
+          $ref: '#/components/schemas/Money'
           description: Balance of the bank account
         balanceSetAt:
           type: [string, 'null']
           format: date-time
           description: Date and time when the balance was manually set
         lastFetch:
-          type: string
+          type: [string, 'null']
           format: date-time
           description: Date and time of the last fetch of the bank account transactions
         fetchEnabled:
@@ -3037,6 +3644,11 @@ components:
             - enabled
             - disabled
           description: Whether fetching of the bank account transactions is enabled
+        fetchDisabledReason:
+          type: [string, 'null']
+          enum:
+            - token_expired
+          description: Why transaction fetching was disabled (null when enabled or manually disabled).
 
     BankAccountTransaction:
       type: object
@@ -3046,7 +3658,7 @@ components:
           format: numeric-string
           description: Numeric ID of the bank account transaction
         externalId:
-          type: string
+          type: [string, 'null']
           description: External ID of the bank account transaction
         date:
           type: string
@@ -3056,27 +3668,27 @@ components:
           $ref: '#/components/schemas/Money'
           description: Amount of the bank account transaction
         payer:
-          type: string
+          type: [string, 'null']
           description: Payer as provided by the bank
         message:
-          type: string
+          type: [string, 'null']
           description: Message as provided by the bank
         note:
-          type: string
+          type: [string, 'null']
           description: Note as provided by the bank
         comment:
-          type: string
+          type: [string, 'null']
           description: Comment as provided by the bank
         vs:
-          type: string
+          type: [string, 'null']
           format: numeric-string
           description: Variable symbol
         ss:
-          type: string
+          type: [string, 'null']
           format: numeric-string
           description: Specific symbol
         ks:
-          type: string
+          type: [string, 'null']
           format: numeric-string
           description: Constant symbol
 
@@ -3231,6 +3843,11 @@ components:
           type: string
           nullable: true
           description: Optional SKU reference for stock-tracked catalog items
+        lineExtras:
+          type: array
+          description: Selected parameter surcharges / extras captured on the line.
+          items:
+            $ref: '#/components/schemas/DocumentItemLineExtra'
         unitPriceTaxFree:
           description: Price excluding VAT of a single unit of the item. Is the same as unit unitPrice if no VAT is defined.
           allOf: # todo this nest is a hack for openapi 3.0, see https://github.com/OAI/OpenAPI-Specification/issues/1514#issuecomment-1386613645
@@ -3282,6 +3899,11 @@ components:
           type: string
           nullable: true
           description: Optional SKU reference for stock-tracked catalog items
+        lineExtras:
+          type: array
+          description: Selected parameter surcharges / extras to capture on the line.
+          items:
+            $ref: '#/components/schemas/DocumentItemLineExtra'
         unitPrice:
           description: Price of a single unit of the item.
           allOf: # todo this nest is a hack for openapi 3.0, see https://github.com/OAI/OpenAPI-Specification/issues/1514#issuecomment-1386613645
@@ -3299,6 +3921,28 @@ components:
             `bottomUp` means that the price is provided as base and tax is added to it.
             `topDown` means that the price is provided as total and tax is deducted from it.
             Value is irrelevant for non-VAT payers.
+
+    DocumentItemLineExtra:
+      type: object
+      properties:
+        parameterId:
+          type: string
+        parameterCode:
+          type: string
+        parameterName:
+          type: string
+        valueId:
+          type: string
+        valueLabel:
+          type: string
+        rawValue: {}
+        priceDelta:
+          type: object
+          properties:
+            amount:
+              type: string
+            currency:
+              type: string
 
     Expense:
       allOf:
@@ -3356,6 +4000,9 @@ components:
 
     Money:
       type: object
+      required:
+        - amount
+        - currency
       properties:
         amount:
           type: string
@@ -3365,6 +4012,80 @@ components:
           type: string
           description: ISO currency format.
           example: EUR
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          $ref: '#/components/schemas/Money'
+        duration:
+          type: integer
+        status:
+          type: string
+        options:
+          type: object
+
+    SubscriptionUnpaidOrder:
+      type: object
+      properties:
+        vs:
+          type: string
+        price:
+          $ref: '#/components/schemas/Money'
+        accountNumber:
+          type: string
+        iban:
+          type: string
+
+    AdminSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - requested
+            - scheduled
+            - active
+            - expired
+            - revoked
+        startDate:
+          type: [string, 'null']
+          format: date-time
+        endDate:
+          type: [string, 'null']
+          format: date-time
+        price:
+          $ref: '#/components/schemas/Money'
+        plan:
+          $ref: '#/components/schemas/SubscriptionPlan'
+        unpaidOrder:
+          oneOf:
+            - $ref: '#/components/schemas/SubscriptionUnpaidOrder'
+            - type: 'null'
+
+    SubscriptionCreate:
+      type: object
+      required:
+        - subscriptionPlanId
+        - startDate
+        - endDate
+      properties:
+        subscriptionPlanId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        price:
+          $ref: '#/components/schemas/Money'
 
     DocumentSequence:
       type: object
@@ -3559,6 +4280,10 @@ components:
             - whenAddressDelivery
             - never
           description: When checkout requires a shipping address before promoting a cart to an order.
+        maxVariantAxes:
+          type: integer
+          description: Maximum number of variant axes that can be assigned to a product.
+          example: 3
         features:
           type: array
           items:
@@ -4176,6 +4901,65 @@ components:
           type: [string, 'null']
         isActive:
           type: boolean
+        variantAxes:
+          type: array
+          items:
+            type: object
+            properties:
+              axisId:
+                type: string
+              sortOrder:
+                type: integer
+              axis:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  valueType:
+                    $ref: '#/components/schemas/ParameterValueType'
+        parameters:
+          type: array
+          items:
+            type: object
+            properties:
+              parameterId:
+                type: string
+              sortOrder:
+                type: integer
+              isRequired:
+                type: boolean
+              parameter:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  valueType:
+                    $ref: '#/components/schemas/ParameterValueType'
+                  isDescriptive:
+                    type: boolean
+                  isFilterable:
+                    type: boolean
+                  isSurcharge:
+                    type: boolean
+        descriptiveValues:
+          type: array
+          items:
+            type: object
+            properties:
+              parameterId:
+                type: string
+              parameterValueId:
+                type: [string, 'null']
+              rawValue:
+                type: [string, 'null']
         createdAt:
           type: string
           format: date-time
@@ -4187,11 +4971,17 @@ components:
     ProductCreate:
       type: object
       properties:
-        sku:
-          type: string
-          description: Must be unique
         name:
           type: string
+        description:
+          type: [string, 'null']
+        productType:
+          type: string
+          enum:
+            - physical
+            - virtual
+            - service
+            - package
         mainCategoryId:
           type: [string, 'null']
         secondaryCategoryIds:
@@ -4202,21 +4992,17 @@ components:
           type: [string, 'null']
         isActive:
           type: boolean
-        productType:
-          type: string
       required:
-        - sku
         - name
         - mainCategoryId
 
     ProductPatch:
       type: object
       properties:
-        sku:
-          type: string
-          description: Must be unique
         name:
           type: string
+        description:
+          type: [string, 'null']
         mainCategoryId:
           type: [string, 'null']
         secondaryCategoryIds:
@@ -4229,6 +5015,335 @@ components:
           type: boolean
         productType:
           type: string
+          enum:
+            - physical
+            - virtual
+            - service
+            - package
+
+    ParameterValueType:
+      type: string
+      enum:
+        - text
+        - color
+        - number
+        - boolean
+        - select
+
+    VariantValue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with vv_ prefix.
+        code:
+          type: string
+        label:
+          type: string
+        sortOrder:
+          type: integer
+        payload:
+          type: [object, 'null']
+          additionalProperties: true
+
+    VariantAxis:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with vax_ prefix.
+          example: vax_2udYHpoPWQeAazs1GOWA7BEZxUc
+        code:
+          type: string
+        name:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariantValue'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - name
+        - valueType
+
+    VariantAxisCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        values:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - label
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              sortOrder:
+                type: integer
+                default: 0
+              payload:
+                type: [object, 'null']
+                additionalProperties: true
+      required:
+        - name
+        - code
+        - valueType
+
+    VariantAxisPatch:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        values:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - label
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              sortOrder:
+                type: integer
+              payload:
+                type: [object, 'null']
+                additionalProperties: true
+
+    ParameterValue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with prv_ prefix.
+        code:
+          type: string
+        label:
+          type: string
+        sortOrder:
+          type: integer
+        payload:
+          type: [object, 'null']
+          additionalProperties: true
+        percentOfBase:
+          type: [string, 'null']
+          description: Percentage surcharge of the base price (e.g. "10.0000").
+        absolutePrices:
+          type: [array, 'null']
+          items:
+            type: object
+            properties:
+              amount:
+                type: string
+              currency:
+                type: string
+
+    Parameter:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with prm_ prefix.
+          example: prm_2udYHpoPWQeAazs1GOWA7BEZxUc
+        code:
+          type: string
+        name:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        isDescriptive:
+          type: boolean
+        isFilterable:
+          type: boolean
+        isSurcharge:
+          type: boolean
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterValue'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - name
+        - valueType
+
+    ParameterCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        isDescriptive:
+          type: boolean
+          default: false
+        isFilterable:
+          type: boolean
+          default: false
+        isSurcharge:
+          type: boolean
+          default: false
+        values:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - label
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              sortOrder:
+                type: integer
+                default: 0
+              payload:
+                type: [object, 'null']
+                additionalProperties: true
+              percentOfBase:
+                type: [string, 'null']
+              absolutePrices:
+                type: [array, 'null']
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: string
+                    currency:
+                      type: string
+      required:
+        - name
+        - code
+        - valueType
+
+    ParameterPatch:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        valueType:
+          $ref: '#/components/schemas/ParameterValueType'
+        isDescriptive:
+          type: boolean
+        isFilterable:
+          type: boolean
+        isSurcharge:
+          type: boolean
+        values:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - label
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              sortOrder:
+                type: integer
+              payload:
+                type: [object, 'null']
+                additionalProperties: true
+              percentOfBase:
+                type: [string, 'null']
+              absolutePrices:
+                type: [array, 'null']
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: string
+                    currency:
+                      type: string
+
+    AssignProductVariantAxes:
+      type: object
+      required:
+        - axes
+      properties:
+        axes:
+          type: array
+          items:
+            type: object
+            required:
+              - axisId
+            properties:
+              axisId:
+                type: string
+              sortOrder:
+                type: integer
+                default: 0
+
+    AssignProductParameters:
+      type: object
+      required:
+        - parameters
+      properties:
+        parameters:
+          type: array
+          items:
+            type: object
+            required:
+              - parameterId
+            properties:
+              parameterId:
+                type: string
+              sortOrder:
+                type: integer
+                default: 0
+              isRequired:
+                type: boolean
+                default: false
+              descriptiveValueId:
+                type: [string, 'null']
+              rawValue:
+                type: [string, 'null']
+
+    GenerateSkusRequest:
+      type: object
+      properties:
+        all:
+          type: boolean
+          default: false
+          description: When true, generate SKUs for all option value combinations of the product axes.
+        combos:
+          type: array
+          description: Explicit option-value combinations to generate. Each combo is a list of variant value IDs.
+          items:
+            type: array
+            items:
+              type: string
 
     Sku:
       type: object
@@ -4257,6 +5372,26 @@ components:
         isSystem:
           type: boolean
           description: True for the auto-created hidden SKU. Omitted from product SKU lists when user-defined SKUs exist.
+        optionValueIds:
+          type: array
+          description: Variant value IDs that define this SKU option combination.
+          items:
+            type: string
+        options:
+          type: array
+          description: Optional resolved option labels for the SKU combination.
+          items:
+            type: object
+            properties:
+              axisId:
+                type: string
+              valueId:
+                type: string
+              label:
+                type: string
+        optionComboHash:
+          type: [string, 'null']
+          description: Stable hash of the sorted option value IDs. Null for SKUs without options.
         price:
           $ref: '#/components/schemas/SkuPrice'
           description: Current active price, null if no price is set.
@@ -4296,6 +5431,11 @@ components:
         isActive:
           type: boolean
           default: true
+        optionValueIds:
+          type: array
+          description: Variant value IDs that define this SKU option combination.
+          items:
+            type: string
         bundleItems:
           type: [array, 'null']
           description: Required when isBundle is true.
@@ -4839,6 +5979,11 @@ components:
             - enabled
             - disabled
           description: Whether automatic transaction fetching is enabled.
+        fetchDisabledReason:
+          type: [string, 'null']
+          enum:
+            - token_expired
+          description: Why transaction fetching was disabled (null when enabled or manually disabled).
 
   parameters:
     date:
