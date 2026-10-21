@@ -2379,11 +2379,16 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - data
+                  - total
                 properties:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SyncedBankAccount'
+                      $ref: '#/components/schemas/BankAccount'
+                  total:
+                    type: integer
         '404':
           $ref: '#/components/responses/ErrorResponse'
         '500':
@@ -2489,11 +2494,16 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - data
+                  - total
                 properties:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SyncedBankAccount'
+                      $ref: '#/components/schemas/BankAccount'
+                  total:
+                    type: integer
         '404':
           $ref: '#/components/responses/ErrorResponse'
         '500':
