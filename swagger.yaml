@@ -130,11 +130,15 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   /auth/token:
+    servers:
+      - url: "https://invo.space/api/v1"
+        description: "Production server (API v1)"
     post:
       summary: "Get JWT token"
       operationId: "getAuthToken"
       description: |
-        Returns a JWT token for the given credentials.
+        Returns a JWT token and a refresh token for the given credentials.
+        The token is bound to the current account of the user (`acc` claim).
       requestBody:
         content:
           application/json:
@@ -153,21 +157,123 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: "1"
-                  token:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1Ni"
-                  expires:
-                    type: string
-                    format: date-time
-                    example: "2023-03-01T00:00:00Z"
+                $ref: "#/components/schemas/AuthTokens"
         '400':
           $ref: "#/components/responses/ErrorResponse"
         '401':
+          $ref: "#/components/responses/ErrorResponse"
+        '429':
+          description: "Too many failed login attempts for this e-mail or from this IP address. Wait for `Retry-After` seconds."
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+
+  /auth/refresh:
+    servers:
+      - url: "https://invo.space/api/v1"
+        description: "Production server (API v1)"
+    post:
+      summary: "Refresh JWT token"
+      operationId: "refreshAuthToken"
+      description: |
+        Returns a new JWT token and a new refresh token. The used refresh token stops working, so the client must store the new one.
+        Using an already used refresh token again ends the whole session (both the old and the new tokens),
+        because it means the token was copied. Clients must not send two refresh requests with the same refresh token at the same time.
+        The new token keeps the account of the refresh token, so an account switch on another device has no effect on it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        '400':
+          $ref: "#/components/responses/ErrorResponse"
+
+  /auth/logout:
+    post:
+      summary: "Log out"
+      operationId: "logout"
+      description: |
+        Ends one session: its access token and refresh token stop working at once.
+        Other sessions of the user (other devices) do not change. Unknown refresh tokens are ignored.
+        * Token clients (mobile app) send the refresh token in the body.
+        * The web sends no body; the refresh token comes from the `refresh_token` cookie, which is then cleared.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: "Session ended"
+        '400':
+          $ref: "#/components/responses/ErrorResponse"
+
+  /me:
+    get:
+      summary: "Get current user"
+      operationId: "getMe"
+      description: Returns the authenticated user and the account of this request.
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/ErrorResponse"
+
+  /me/account:
+    post:
+      summary: "Switch account"
+      operationId: "switchAccount"
+      description: |
+        Switches the account.
+        * Bearer token clients get new tokens in the body (200). Only these tokens use the new account; other devices and sessions do not change.
+          The session of the token that made the request ends, so the client must replace both tokens.
+        * Session (cookie) clients get the token in the `Authorization` header and the refresh token in a cookie (204). The account is saved on the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+              properties:
+                accountId:
+                  type: string
+                  description: Account ID (acc_ prefixed KSUID).
+      responses:
+        '200':
+          description: "Account switched (Bearer token client)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        '204':
+          description: "Account switched (session client)"
+        '400':
+          $ref: "#/components/responses/ErrorResponse"
+        '403':
           $ref: "#/components/responses/ErrorResponse"
 
   /contacts:
@@ -715,6 +821,9 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
 
   /cash-register/settings:
+    servers:
+      - url: "https://invo.space/api/v1"
+        description: "Production server (API v1)"
     get:
       tags:
         - cash-register
@@ -730,23 +839,26 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [cashRegisterIdentifier, address, workplaceIdentifier, amountThenPrice, showEmail, showPhone, taxRates, defaultTaxRate, paymentTypes, warehouseId]
                 properties:
                   cashRegisterIdentifier:
                     type: string
                     description: Unique identifier or name of the cash register.
                     example: "My Cash Register 1"
                   address:
-                    $ref: '#/components/schemas/Address'
+                    anyOf:
+                      - $ref: '#/components/schemas/Address'
+                      - type: 'null'
                   workplaceIdentifier:
                     type: string
                     description: Unique identifier of the workplace ("IČ provozovny").
                   amountThenPrice:
                     type: boolean
                     description: Specifies whether the amount is first typed and then the price or vice versa.
-                  printEmail:
+                  showEmail:
                     type: boolean
                     description: Whether to print email on the receipt.
-                  printPhone:
+                  showPhone:
                     type: boolean
                     description: Whether to print phone number on the receipt.
                   taxRates:
@@ -755,9 +867,10 @@ paths:
                       $ref: '#/components/schemas/TaxRate'
                     description: List of enabled tax rates.
                   defaultTaxRate:
-                    $ref: '#/components/schemas/TaxRate'
                     description: Default tax rate. Must be one of the enabled tax rates.
-                    example: '21'
+                    anyOf:
+                      - $ref: '#/components/schemas/TaxRate'
+                      - type: 'null'
                   paymentTypes:
                     type: array
                     items:
@@ -797,7 +910,7 @@ paths:
                   description: Specifies whether the amount is first typed and then the price or vice versa.
                 address:
                   $ref: '#/components/schemas/Address'
-                workplaceIdentifier:
+                workplaceId:
                   type: string
                   description: Unique identifier of the workplace ("IČ provozovny").
                 taxRates:
@@ -812,10 +925,10 @@ paths:
                   type: string
                   description: Default tax rate that is selected in cash register. Must be one of the enabled tax rates.
                   example: '3'
-                printEmail:
+                showEmail:
                   type: boolean
                   description: Whether to print email on the receipt.
-                printPhone:
+                showPhone:
                   type: boolean
                   description: Whether to print phone number on the receipt.
                 paymentTypes:
@@ -835,12 +948,12 @@ paths:
                 - cashRegisterIdentifier
                 - amountThenPrice
                 - address
-                - workplaceIdentifier
+                - workplaceId
                 - taxRates
                 - defaultTaxRate
                 - paymentTypes
-                - printEmail
-                - printPhone
+                - showEmail
+                - showPhone
       responses:
         '400':
           $ref: '#/components/responses/ErrorResponse'
@@ -858,6 +971,9 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   /cash-register/daily-summary:
+    servers:
+      - url: "https://invo.space/api/v1"
+        description: "Production server (API v1)"
     get:
       tags:
         - cash-register
@@ -880,6 +996,9 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   /cash-register/monthly-summary:
+    servers:
+      - url: "https://invo.space/api/v1"
+        description: "Production server (API v1)"
     get:
       tags:
         - cash-register
@@ -922,6 +1041,7 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [data, total]
                 properties:
                   data:
                     type: array
@@ -943,7 +1063,7 @@ paths:
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '200':
-          description: Receipt was created successfully
+          description: Receipt was created successfully, or the Receipt with the given `uuid` already exists
           content:
             application/json:
               schema:
@@ -1100,6 +1220,7 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [data, total]
                 properties:
                   data:
                     type: array
@@ -3430,6 +3551,69 @@ paths:
 
 components:
   schemas:
+    AuthTokens:
+      type: object
+      required:
+        - id
+        - token
+        - refreshToken
+        - expires
+      properties:
+        id:
+          type: string
+          description: User ID
+          example: "1"
+        token:
+          type: string
+          description: "JWT access token. Send it as `Authorization: Bearer <token>`."
+          example: "eyJhbGciOiJIUzI1Ni"
+        refreshToken:
+          type: string
+          description: Token for `POST /auth/refresh`.
+        expires:
+          type: string
+          format: date-time
+          description: Expiration of the access token.
+          example: "2023-03-01T00:00:00Z"
+
+    Me:
+      type: object
+      properties:
+        firstName:
+          type: [string, 'null']
+        lastName:
+          type: [string, 'null']
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        sia:
+          type: boolean
+          description: Whether the subscription of the account is active.
+        subscriptionEndsAt:
+          type: [string, 'null']
+          format: date-time
+        currentAccountId:
+          type: [string, 'null']
+          description: Account of this request. For Bearer token clients, it is the account of the token.
+        accounts:
+          type: array
+          description: Present only when the user has more than one account.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              isPrimary:
+                type: boolean
+        fpr:
+          type: string
+          description: Present when the user must change the password.
+
     Error:
       type: object
       properties:
@@ -4012,6 +4196,9 @@ components:
           type: string
           description: ISO currency format.
           example: EUR
+      required:
+        - amount
+        - currency
 
     SubscriptionPlan:
       type: object
@@ -4544,7 +4731,7 @@ components:
             - $ref: "#/components/schemas/Money"
           description: Tax on a single unit of the item.
         taxRate:
-          type: integer
+          type: [integer, 'null']
           description: Tax rate applied on the item or null if VAT is not applicable.
         description:
           type: string
@@ -4600,6 +4787,9 @@ components:
         - id
         - amount
         - unitPrice
+        - unitPriceTaxFree
+        - unitTax
+        - taxRate
 
     Receipt:
       type: object
@@ -4610,17 +4800,22 @@ components:
           description: UUID4 of the Receipt
         supplier:
           type: object
+          required: [ico, dic]
           properties:
             ico:
-              type: string
+              type: [string, 'null']
               description: Company identification number
             dic:
-              type: string
+              type: [string, 'null']
               description: Tax identification number (TIN)
         issuedAt:
           type: string
           format: date-time
-          description: Date of issuance that appears on the receipt
+          description: Time of the sale. It appears on the receipt and is used for EET, summaries and date filters.
+        createdAt:
+          type: string
+          format: date-time
+          description: Time when the server recorded the Receipt. Later than `issuedAt` when an offline client syncs the Receipt later.
         paymentType:
           type: string
           enum:
@@ -4635,10 +4830,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReceiptLine'
+        references:
+          type: array
+          description: Documents linked to the Receipt.
+          items:
+            type: object
+            required: [target, targetType]
+            properties:
+              target:
+                type: string
+              targetType:
+                type: string
+      required: [id, supplier, issuedAt, createdAt, paymentType, warehouseId, receiptLines, references]
 
     EetStatus:
       type: object
+      required: [country, isCzech, enabled, environment, verificationMode, idProvozovny, configured, setupRequired, deadlineWarning, certificates]
       properties:
+        country:
+          type: [string, 'null']
+          description: Country of the account's supplier.
         isCzech:
           type: boolean
         enabled:
@@ -4664,6 +4875,7 @@ components:
 
     EetCertificateInfo:
       type: object
+      required: [eic, serialNumber, validFrom, validTo, environment, isValid, expiresSoon, daysUntilExpiry]
       properties:
         eic:
           type: string
@@ -4725,6 +4937,7 @@ components:
 
     EetSubmission:
       type: object
+      required: [id, receiptId, messageUuid, status, fik, datTrzby, celkTrzba, sentAt, receivedAt, prvniZaslani, attempts, errorCode, errorMessage, warnings]
       properties:
         id:
           type: integer
@@ -4785,29 +4998,40 @@ components:
           allOf:
             - $ref: "#/components/schemas/Money"
           description: Total price excluding VAT
+      required:
+        - total
+        - totalTax
+        - totalTaxFree
 
     Summary:
       type: object
+      description: |
+        Totals of the receipts in the period. `byType` and `byTax` contain only keys with receipts;
+        with no receipts they are empty (sent as an empty JSON array).
       properties:
         total:
           allOf:
-            - $ref: "#/components/schemas/Money"
-          description: Total revenue including VAT
+            - $ref: "#/components/schemas/SummaryRow"
+          description: Totals of all receipts
         byType:
           type: object
           properties:
-            cash:
+            Cash:
               $ref: '#/components/schemas/SummaryRow'
-            card:
+            Card:
+              $ref: '#/components/schemas/SummaryRow'
+            Qr:
               $ref: '#/components/schemas/SummaryRow'
           description: Summary broken down by payment type
         byTax:
           type: object
           additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/SummaryRow'
-          description: Summary broken down by tax rate
+            $ref: '#/components/schemas/SummaryRow'
+          description: Summary broken down by tax rate (key is the rate in percent, "0" for lines without VAT)
+      required:
+        - total
+        - byType
+        - byTax
 
     Category:
       type: object
@@ -6178,6 +6402,18 @@ components:
               - paymentType
               - receiptLines
             properties:
+              uuid:
+                type: [string, 'null']
+                format: uuid
+                description: |
+                  Client-generated UUID of the Receipt. When a Receipt with this UUID already exists,
+                  no new Receipt is created and the existing one is returned (safe retry for offline clients).
+                example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
+              issuedAt:
+                type: [string, 'null']
+                format: date-time
+                description: Time of the sale. Defaults to the time when the server records the Receipt.
+                example: '2026-10-21T10:15:30.000Z'
               paymentType:
                 type: string
                 enum:
