@@ -1807,27 +1807,6 @@ paths:
         '404':
           description: Not found
 
-    put:
-      tags:
-        - catalog
-      summary: Replace product
-      operationId: "updateProduct"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductCreate'
-      responses:
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Product'
-
     patch:
       tags:
         - catalog
@@ -3131,10 +3110,25 @@ paths:
       summary: List payment methods
       operationId: listPaymentMethods
       tags: [Eshop]
+
+  /payment-methods/{type}:
     patch:
       summary: Update payment method
       operationId: updatePaymentMethod
       tags: [Eshop]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [payOnPickup, cashOnDelivery, bankTransfer, cardPayment]
+          description: Payment method type
+      responses:
+        '200':
+          description: Payment method updated
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
 
   /storefront-tokens:
     get:
