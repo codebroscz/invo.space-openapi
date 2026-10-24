@@ -29,8 +29,8 @@ paths:
       summary: "Sign up"
       operationId: "signUp"
       description: |
-        Creates a new user account. The user will receive an email with a link to set the password.
-        The user will be logged in automatically after the account is created.
+        Creates a new unverified user account and sends a verification e-mail.
+        The user cannot log in until the e-mail address is verified (see `PATCH /auth/verify`).
       requestBody:
         content:
           application/json:
@@ -162,6 +162,22 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         '401':
           $ref: "#/components/responses/ErrorResponse"
+        '403':
+          description: "The e-mail address of the account is not verified (error code 40097)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  code:
+                    type: integer
+                    example: 40097
+                  message:
+                    type: string
+                    example: "Account not verified."
         '429':
           description: "Too many failed login attempts for this e-mail or from this IP address. Wait for `Retry-After` seconds."
           headers:
