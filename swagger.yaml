@@ -3334,6 +3334,71 @@ paths:
       operationId: storefrontCardPaymentCallback
       tags: [Storefront]
 
+  /subscriptions:
+    get:
+      tags:
+        - subscriptions
+      summary: Current subscription
+      description: Returns the active subscription of the account. Requires the role owner or manager.
+      operationId: getCurrentSubscription
+      responses:
+        '200':
+          description: The active subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '204':
+          description: The account has no subscription
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - subscriptions
+      summary: Order a subscription plan
+      description: |
+        Creates a subscription for the plan (a new one, or a prolongation of the current plan) and an unpaid order.
+        The payment details of the order are in `GET /subscription-plans` (`orders` with `paid: false`).
+        Requires the role owner or manager.
+      operationId: createSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subscriptionPlanId
+              properties:
+                subscriptionPlanId:
+                  type: string
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /subscription-plans:
+    get:
+      tags:
+        - subscriptions
+      summary: Subscription plans with the orders of the account
+      description: Active plans. `orders` contains the orders of the account for the plan, newest first. Requires the role owner or manager.
+      operationId: getSubscriptionPlans
+      responses:
+        '200':
+          description: Active plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanOffer'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
   /admin/subscription-plans:
     get:
       tags:
@@ -4226,6 +4291,66 @@ components:
         options:
           type: object
 
+    Subscription:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [requested, scheduled, active, expired, revoked]
+        startDate:
+          type: [string, 'null']
+          format: date-time
+        endDate:
+          type: [string, 'null']
+          format: date-time
+        price:
+          $ref: '#/components/schemas/Money'
+        plan:
+          $ref: '#/components/schemas/SubscriptionPlan'
+    SubscriptionPlanOrder:
+      type: object
+      required:
+        - orderId
+        - subscriptionId
+        - paid
+        - price
+        - vs
+        - accountNumber
+      properties:
+        orderId:
+          type: string
+        customerId:
+          type: string
+        subscriptionId:
+          type: string
+        paid:
+          type: boolean
+        price:
+          $ref: '#/components/schemas/Money'
+        vs:
+          type: string
+          description: Variable symbol for the bank transfer
+        accountNumber:
+          type: string
+          description: Czech bank account number, e.g. 123-4567890123/0800
+        iban:
+          type: [string, 'null']
+    SubscriptionPlanOffer:
+      allOf:
+        - $ref: '#/components/schemas/SubscriptionPlan'
+        - type: object
+          required:
+            - orders
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/SubscriptionPlanOrder'
     SubscriptionUnpaidOrder:
       type: object
       properties:
@@ -6001,9 +6126,9 @@ components:
       type: object
       properties:
         id:
-          type: string
-          description: ID of the tax rate. Currently numeric string, but will be in `tax_<string>` KSUID format in the future.
-          example: '3'
+          type: integer
+          description: ID of the tax rate.
+          example: 3
         name:
           type: string
           description: Name of the tax rate
@@ -6012,7 +6137,7 @@ components:
           type: number
           description: Percentage value of the tax rate
           example: 21
-        default:
+        isDefault:
           type: string
           enum:
             - 'yes'
@@ -6020,19 +6145,19 @@ components:
           description: Whether the tax rate is default within the country
         validSince:
           type: string
-          format: date
-          description: Date since when the tax rate is valid
-          example: 2024-01-01
+          format: date-time
+          description: Since when the tax rate is valid
+          example: '2024-01-01T00:00:00+01:00'
         validUntil:
           type: [string, 'null']
-          format: date
-          description: Date until when the tax rate is valid
-          example: 2024-12-31
+          format: date-time
+          description: Until when the tax rate is valid
+          example: '2024-12-31T23:59:59+01:00'
       required:
         - id
         - name
         - percentage
-        - default
+        - isDefault
         - validSince
         - validUntil
 #        replacedBy:
@@ -6457,6 +6582,9 @@ components:
                     skuId:
                       type: string
                       description: Internal ID of the SKU associated with the receipt line.
+                    description:
+                      type: [string, 'null']
+                      description: Name of a line without a product, printed on the receipt.
                     sale:
                       type: object
                       description: Optional sale applied to the receipt line. When present, the object MUST contain both `type` and `value`.
