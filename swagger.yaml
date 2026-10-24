@@ -1083,25 +1083,53 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: UUID of the created Receipt.
-                  uuid:
-                    type: string
-                    description: UUID of the created Receipt.
-                  permalink:
-                    type: string
-                    format: url
-                    description: Permanent link leading to PDF version of the Receipt.
-                  qr:
-                    type: string
-                    description: If paymentType of created Receipt is 'Qr', then this field contains raw data for QR payment.
+                $ref: "#/components/schemas/CreatedReceipt"
         default:
           $ref: '#/components/responses/ErrorResponse'
 
   /receipts/{id}:
+    patch:
+      tags:
+        - receipts
+      summary: Change payment type of Receipt
+      description: Changes the payment type, for example when the customer changes mind right after the sale. EET data does not include the payment type, so the EET submission stays valid.
+      operationId: "updateReceipt"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: '9961d718-cae7-48e9-845d-e5c21f4ecdb3'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentType]
+              properties:
+                paymentType:
+                  type: string
+                  enum:
+                    - Cash
+                    - Card
+                    - Qr
+      responses:
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          description: Payment type was changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedReceipt"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
     delete:
       tags:
         - receipts
@@ -4271,9 +4299,6 @@ components:
           type: string
           description: ISO currency format.
           example: EUR
-      required:
-        - amount
-        - currency
 
     SubscriptionPlan:
       type: object
@@ -4925,6 +4950,23 @@ components:
         - unitPriceTaxFree
         - unitTax
         - taxRate
+
+    CreatedReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+          description: UUID of the Receipt.
+        uuid:
+          type: string
+          description: UUID of the Receipt.
+        permalink:
+          type: string
+          format: url
+          description: Permanent link leading to PDF version of the Receipt.
+        qr:
+          type: string
+          description: If paymentType of the Receipt is 'Qr', then this field contains raw data for QR payment.
 
     Receipt:
       type: object
