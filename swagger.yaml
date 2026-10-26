@@ -1637,6 +1637,9 @@ paths:
         - catalog
       summary: Update variant axis (partial)
       operationId: "patchVariantAxis"
+      description: |
+        When `values` is sent, it replaces the list of values.
+        A value with `id` is updated and keeps its ID. A value without `id` is created. A value that is not in the list is removed.
       requestBody:
         required: true
         content:
@@ -1654,6 +1657,12 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         '404':
           description: Not found
+        '409':
+          description: A removed value is used by a SKU. Delete the SKU first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       tags:
@@ -1667,6 +1676,12 @@ paths:
           description: Invalid ID format
         '404':
           description: Not found
+        '409':
+          description: The axis is assigned to a product. Remove it from all products first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /parameters:
     get:
@@ -1746,6 +1761,9 @@ paths:
         - catalog
       summary: Update parameter (partial)
       operationId: "patchParameter"
+      description: |
+        When `values` is sent, it replaces the list of values.
+        A value with `id` is updated and keeps its ID. A value without `id` is created. A value that is not in the list is removed.
       requestBody:
         required: true
         content:
@@ -1763,6 +1781,12 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         '404':
           description: Not found
+        '409':
+          description: A removed value is the descriptive value of a product. Change the product first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       tags:
@@ -1776,6 +1800,12 @@ paths:
           description: Invalid ID format
         '404':
           description: Not found
+        '409':
+          description: The parameter is assigned to a product. Remove it from all products first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /products:
     get:
@@ -1895,7 +1925,9 @@ paths:
       tags:
         - catalog
       summary: Assign variant axes to product
-      description: Replaces the product's assigned variant axes.
+      description: |
+        Replaces the product's assigned variant axes.
+        The list can have at most `maxVariantAxes` items (an account setting, default 3, see `GET /settings`). A longer list gives 400 `validation-error`.
       operationId: "assignProductVariantAxes"
       requestBody:
         required: true
@@ -2181,6 +2213,112 @@ paths:
                           $ref: '#/components/schemas/SkuPrice'
                   total:
                     type: integer
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /skus/{id}/images:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: SKU KSUID with sku_ prefix
+    post:
+      tags:
+        - sales
+      summary: Upload SKU images
+      description: Appends the uploaded images to the end of the SKU gallery. A SKU can have at most 20 images.
+      operationId: uploadSkuImages
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: string
+                    format: binary
+              required:
+                - files
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /skus/{id}/images/order:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: SKU KSUID with sku_ prefix
+    put:
+      tags:
+        - sales
+      summary: Reorder SKU images
+      description: Sets the order of the SKU images. imageIds must contain all image IDs of the SKU.
+      operationId: reorderSkuImages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imageIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - imageIds
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /skus/{id}/images/{imageId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: SKU KSUID with sku_ prefix
+      - in: path
+        name: imageId
+        required: true
+        schema:
+          type: string
+          description: SKU image KSUID with simg_ prefix
+    delete:
+      tags:
+        - sales
+      summary: Delete SKU image
+      operationId: deleteSkuImage
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sku'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -3321,10 +3459,58 @@ paths:
       tags: [Storefront]
 
   /api/storefront/v1/carts/{id}/items:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     post:
       summary: Add cart item
+      description: |
+        Adds a SKU to the cart. A line with the same SKU and the same extras gets its quantity increased.
+        Each extra must be a value of a surcharge parameter (`isSurcharge`) assigned to the SKU's product, at most one value per parameter.
+        The line price is the SKU price plus the surcharges.
       operationId: storefrontAddCartItem
       tags: [Storefront]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - skuId
+                - quantity
+              properties:
+                skuId:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+                extras:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - parameterValueId
+                    properties:
+                      parameterValueId:
+                        type: string
+      responses:
+        '201':
+          description: Cart with the added item. Only `items` is described here.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CartItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
 
   /api/storefront/v1/carts/{id}/customer:
     patch:
@@ -3427,231 +3613,6 @@ paths:
                   $ref: '#/components/schemas/SubscriptionPlanOffer'
         '400':
           $ref: '#/components/responses/ErrorResponse'
-  /admin/subscription-plans:
-    get:
-      tags:
-        - admin
-      summary: List active subscription plans
-      operationId: listAdminSubscriptionPlans
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/SubscriptionPlan'
-                  total:
-                    type: integer
-
-  /admin/accounts/{id}/subscriptions:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-    get:
-      tags:
-        - admin
-      summary: List subscriptions for account
-      operationId: listAccountSubscriptions
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AdminSubscription'
-                  total:
-                    type: integer
-        '404':
-          description: Account not found
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-    post:
-      tags:
-        - admin
-      summary: Create subscription for account
-      operationId: createAccountSubscription
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SubscriptionCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSubscription'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-        '404':
-          description: Account not found
-
-  /admin/accounts/{id}/subscriptions/{subscriptionId}/activate:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-      - in: path
-        name: subscriptionId
-        required: true
-        schema:
-          type: string
-          description: Subscription KSUID
-    post:
-      tags:
-        - admin
-      summary: Activate subscription
-      operationId: activateAccountSubscription
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSubscription'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-        '409':
-          description: Conflict
-
-  /admin/accounts/{id}/subscriptions/{subscriptionId}/revoke:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-      - in: path
-        name: subscriptionId
-        required: true
-        schema:
-          type: string
-          description: Subscription KSUID
-    post:
-      tags:
-        - admin
-      summary: Revoke subscription
-      operationId: revokeAccountSubscription
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSubscription'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-
-  /admin/accounts/{id}/subscriptions/{subscriptionId}/prolong:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-      - in: path
-        name: subscriptionId
-        required: true
-        schema:
-          type: string
-          description: Subscription KSUID
-    post:
-      tags:
-        - admin
-      summary: Prolong subscription
-      operationId: prolongAccountSubscription
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSubscription'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-
-  /admin/accounts/{id}/subscriptions/{subscriptionId}/payment-emails:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-      - in: path
-        name: subscriptionId
-        required: true
-        schema:
-          type: string
-          description: Subscription KSUID
-    post:
-      tags:
-        - admin
-      summary: Send payment e-mail for subscription
-      operationId: sendAccountSubscriptionPaymentEmail
-      responses:
-        '204':
-          description: No content
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-
-  /admin/accounts/{id}/max-variant-axes:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Account KSUID
-    patch:
-      tags:
-        - admin
-      summary: Update max variant axes for account
-      description: Admin-only. Sets the maximum number of variant axes that can be assigned to products on the account.
-      operationId: "updateAccountMaxVariantAxes"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - maxVariantAxes
-              properties:
-                maxVariantAxes:
-                  type: integer
-                  minimum: 1
-                  description: Maximum number of variant axes per product.
-                  example: 3
-      responses:
-        '200':
-          description: OK
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
-        '404':
-          description: Account not found
-
 components:
   schemas:
     AuthTokens:
@@ -4131,7 +4092,7 @@ components:
           nullable: true
           description: Optional SKU reference for stock-tracked catalog items
         lineExtras:
-          type: array
+          type: [array, 'null']
           description: Selected parameter surcharges / extras captured on the line.
           items:
             $ref: '#/components/schemas/DocumentItemLineExtra'
@@ -4187,7 +4148,7 @@ components:
           nullable: true
           description: Optional SKU reference for stock-tracked catalog items
         lineExtras:
-          type: array
+          type: [array, 'null']
           description: Selected parameter surcharges / extras to capture on the line.
           items:
             $ref: '#/components/schemas/DocumentItemLineExtra'
@@ -4209,6 +4170,47 @@ components:
             `topDown` means that the price is provided as total and tax is deducted from it.
             Value is irrelevant for non-VAT payers.
 
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        skuId:
+          type: [string, 'null']
+        deliveryMethodType:
+          type: [string, 'null']
+          description: Set on the delivery line only.
+        pickupPointId:
+          type: [string, 'null']
+          description: Personal pickup point. Set on the delivery line only.
+        carrierPickupPointId:
+          type: [string, 'null']
+          description: Carrier pickup point. Set on the delivery line only.
+        paymentMethodType:
+          type: [string, 'null']
+          description: Set on the payment line only.
+        quantity:
+          type: integer
+        name:
+          type: [string, 'null']
+        unitPrice:
+          description: Unit price excluding VAT, surcharges included.
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        unitPriceInclVat:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        taxRate:
+          type: [integer, 'null']
+        lineExtras:
+          type: [array, 'null']
+          items:
+            $ref: '#/components/schemas/DocumentItemLineExtra'
+
     DocumentItemLineExtra:
       type: object
       properties:
@@ -4222,14 +4224,12 @@ components:
           type: string
         valueLabel:
           type: string
-        rawValue: {}
+        rawValue:
+          type: [string, 'null']
         priceDelta:
-          type: object
-          properties:
-            amount:
-              type: string
-            currency:
-              type: string
+          description: Surcharge of this extra per unit, including VAT.
+          allOf:
+            - $ref: '#/components/schemas/Money'
 
     Expense:
       allOf:
@@ -4302,6 +4302,7 @@ components:
 
     SubscriptionPlan:
       type: object
+      required: [id, name, price, duration, status, options]
       properties:
         id:
           type: string
@@ -4376,64 +4377,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/SubscriptionPlanOrder'
-    SubscriptionUnpaidOrder:
-      type: object
-      properties:
-        vs:
-          type: string
-        price:
-          $ref: '#/components/schemas/Money'
-        accountNumber:
-          type: string
-        iban:
-          type: string
-
-    AdminSubscription:
-      type: object
-      properties:
-        id:
-          type: string
-        status:
-          type: string
-          enum:
-            - requested
-            - scheduled
-            - active
-            - expired
-            - revoked
-        startDate:
-          type: [string, 'null']
-          format: date-time
-        endDate:
-          type: [string, 'null']
-          format: date-time
-        price:
-          $ref: '#/components/schemas/Money'
-        plan:
-          $ref: '#/components/schemas/SubscriptionPlan'
-        unpaidOrder:
-          oneOf:
-            - $ref: '#/components/schemas/SubscriptionUnpaidOrder'
-            - type: 'null'
-
-    SubscriptionCreate:
-      type: object
-      required:
-        - subscriptionPlanId
-        - startDate
-        - endDate
-      properties:
-        subscriptionPlanId:
-          type: string
-        startDate:
-          type: string
-          format: date-time
-        endDate:
-          type: string
-          format: date-time
-        price:
-          $ref: '#/components/schemas/Money'
-
     DocumentSequence:
       type: object
       required:
@@ -4577,6 +4520,9 @@ components:
         - primaryCurrency
         - alternativeCurrencies
         - yearOfRegistration
+        - eshopPriceMode
+        - addressRequirement
+        - maxVariantAxes
       properties:
         footnote:
           type: [string, 'null']
@@ -5306,6 +5252,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - axisId
+              - sortOrder
+              - axis
             properties:
               axisId:
                 type: string
@@ -5313,6 +5263,12 @@ components:
                 type: integer
               axis:
                 type: object
+                required:
+                  - id
+                  - code
+                  - name
+                  - valueType
+                  - values
                 properties:
                   id:
                     type: string
@@ -5322,10 +5278,19 @@ components:
                     type: string
                   valueType:
                     $ref: '#/components/schemas/ParameterValueType'
+                  values:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VariantValue'
         parameters:
           type: array
           items:
             type: object
+            required:
+              - parameterId
+              - sortOrder
+              - isRequired
+              - parameter
             properties:
               parameterId:
                 type: string
@@ -5335,6 +5300,15 @@ components:
                 type: boolean
               parameter:
                 type: object
+                required:
+                  - id
+                  - code
+                  - name
+                  - valueType
+                  - isDescriptive
+                  - isFilterable
+                  - isSurcharge
+                  - values
                 properties:
                   id:
                     type: string
@@ -5350,10 +5324,18 @@ components:
                     type: boolean
                   isSurcharge:
                     type: boolean
+                  values:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParameterValue'
         descriptiveValues:
           type: array
           items:
             type: object
+            required:
+              - parameterId
+              - parameterValueId
+              - rawValue
             properties:
               parameterId:
                 type: string
@@ -5368,6 +5350,7 @@ components:
         - id
         - name
         - slug
+        - createdAt
 
     ProductCreate:
       type: object
@@ -5433,6 +5416,11 @@ components:
 
     VariantValue:
       type: object
+      required:
+        - id
+        - code
+        - label
+        - sortOrder
       properties:
         id:
           type: string
@@ -5472,6 +5460,8 @@ components:
         - code
         - name
         - valueType
+        - values
+        - createdAt
 
     VariantAxisCreate:
       type: object
@@ -5522,18 +5512,27 @@ components:
               - code
               - label
             properties:
+              id:
+                type: [string, 'null']
+                description: ID of an existing value to update. Leave it out to create a value.
               code:
                 type: string
               label:
                 type: string
               sortOrder:
                 type: integer
+                default: 0
               payload:
                 type: [object, 'null']
                 additionalProperties: true
 
     ParameterValue:
       type: object
+      required:
+        - id
+        - code
+        - label
+        - sortOrder
       properties:
         id:
           type: string
@@ -5552,13 +5551,9 @@ components:
           description: Percentage surcharge of the base price (e.g. "10.0000").
         absolutePrices:
           type: [array, 'null']
+          description: Per-currency absolute surcharges.
           items:
-            type: object
-            properties:
-              amount:
-                type: string
-              currency:
-                type: string
+            $ref: '#/components/schemas/Money'
 
     Parameter:
       type: object
@@ -5591,9 +5586,15 @@ components:
         - code
         - name
         - valueType
+        - isDescriptive
+        - isFilterable
+        - isSurcharge
+        - values
+        - createdAt
 
     ParameterCreate:
       type: object
+      description: At least one of `isDescriptive`, `isFilterable` and `isSurcharge` must be true, else 400.
       properties:
         name:
           type: string
@@ -5633,12 +5634,7 @@ components:
               absolutePrices:
                 type: [array, 'null']
                 items:
-                  type: object
-                  properties:
-                    amount:
-                      type: string
-                    currency:
-                      type: string
+                  $ref: '#/components/schemas/Money'
       required:
         - name
         - code
@@ -5667,6 +5663,9 @@ components:
               - code
               - label
             properties:
+              id:
+                type: [string, 'null']
+                description: ID of an existing value to update. Leave it out to create a value.
               code:
                 type: string
               label:
@@ -5681,12 +5680,7 @@ components:
               absolutePrices:
                 type: [array, 'null']
                 items:
-                  type: object
-                  properties:
-                    amount:
-                      type: string
-                    currency:
-                      type: string
+                  $ref: '#/components/schemas/Money'
 
     AssignProductVariantAxes:
       type: object
@@ -5726,10 +5720,12 @@ components:
               isRequired:
                 type: boolean
                 default: false
-              descriptiveValueId:
+              parameterValueId:
                 type: [string, 'null']
+                description: Fixed value of a descriptive parameter that has values. It must be a value of this parameter.
               rawValue:
                 type: [string, 'null']
+                description: Fixed value of a descriptive parameter that has no values.
 
     GenerateSkusRequest:
       type: object
@@ -5739,7 +5735,7 @@ components:
           default: false
           description: When true, generate SKUs for all option value combinations of the product axes.
         combos:
-          type: array
+          type: [array, 'null']
           description: Explicit option-value combinations to generate. Each combo is a list of variant value IDs.
           items:
             type: array
@@ -5783,6 +5779,10 @@ components:
           description: Optional resolved option labels for the SKU combination.
           items:
             type: object
+            required:
+              - axisId
+              - valueId
+              - label
             properties:
               axisId:
                 type: string
@@ -5794,13 +5794,25 @@ components:
           type: [string, 'null']
           description: Stable hash of the sorted option value IDs. Null for SKUs without options.
         price:
-          $ref: '#/components/schemas/SkuPrice'
           description: Current active price, null if no price is set.
+          oneOf:
+            - $ref: '#/components/schemas/SkuPrice'
+            - type: 'null'
         bundleItems:
           type: array
           description: Present only when isBundle is true.
           items:
             $ref: '#/components/schemas/BundleItem'
+        images:
+          type: array
+          description: Own images of the SKU, ordered by sortOrder. The first one is the title image.
+          items:
+            $ref: '#/components/schemas/SkuImage'
+        gallery:
+          type: array
+          description: Images to show for the SKU. Equals images, or the images of the product's system SKU when the SKU has no own images.
+          items:
+            $ref: '#/components/schemas/SkuImage'
         createdAt:
           type: string
           format: date-time
@@ -5813,6 +5825,30 @@ components:
         - isBundle
         - isActive
         - isSystem
+        - optionValueIds
+        - options
+        - optionComboHash
+        - images
+        - gallery
+        - createdAt
+
+    SkuImage:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KSUID with simg_ prefix.
+          example: simg_2udYHpoPWQeAazs1GOWA7BEZxUc
+        url:
+          type: string
+          format: uri
+          description: Public URL of the image file.
+        sortOrder:
+          type: integer
+      required:
+        - id
+        - url
+        - sortOrder
 
     SkuCreate:
       type: object
@@ -5821,7 +5857,7 @@ components:
           type: string
           description: Display name of the SKU variant.
         code:
-          type: string
+          type: [string, 'null']
           description: Unique SKU code. Defaults to {productSlug}-{skuSlug} when omitted.
         productId:
           type: string
@@ -5833,7 +5869,7 @@ components:
           type: boolean
           default: true
         optionValueIds:
-          type: array
+          type: [array, 'null']
           description: Variant value IDs that define this SKU option combination.
           items:
             type: string
