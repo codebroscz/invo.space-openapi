@@ -5007,7 +5007,7 @@ components:
 
     EetStatus:
       type: object
-      required: [country, isCzech, enabled, environment, verificationMode, idProvozovny, configured, setupRequired, deadlineWarning, certificates]
+      required: [country, isCzech, enabled, environment, verificationMode, workplaceId, configured, setupRequired, deadlineWarning, certificates]
       properties:
         country:
           type: [string, 'null']
@@ -5021,7 +5021,7 @@ components:
           enum: [playground, test, production]
         verificationMode:
           type: boolean
-        idProvozovny:
+        workplaceId:
           type: [integer, 'null']
         configured:
           type: boolean
@@ -5082,7 +5082,7 @@ components:
         - enabled
         - environment
         - verificationMode
-        - idProvozovny
+        - workplaceId
       properties:
         enabled:
           type: boolean
@@ -5091,14 +5091,14 @@ components:
           enum: [playground, test, production]
         verificationMode:
           type: boolean
-        idProvozovny:
+        workplaceId:
           type: integer
           minimum: 1
           maximum: 999999999
 
     EetSubmission:
       type: object
-      required: [id, receiptId, messageUuid, status, fik, datTrzby, celkTrzba, sentAt, receivedAt, prvniZaslani, attempts, errorCode, errorMessage, warnings]
+      required: [id, receiptId, messageUuid, status, pok, soldAt, totalAmount, sentAt, receivedAt, firstSubmission, attempts, errorCode, errorMessage, warnings]
       properties:
         id:
           type: integer
@@ -5111,13 +5111,13 @@ components:
         status:
           type: string
           enum: [pending, confirmed, rejected, offline]
-        fik:
+        pok:
           type: [string, 'null']
-          description: Fiscal identification code (FIK) from EET
-        datTrzby:
+          description: Confirmation code (POK) from EET 2.0
+        soldAt:
           type: string
           format: date-time
-        celkTrzba:
+        totalAmount:
           type: string
         sentAt:
           type: [string, 'null']
@@ -5125,7 +5125,7 @@ components:
         receivedAt:
           type: [string, 'null']
           format: date-time
-        prvniZaslani:
+        firstSubmission:
           type: boolean
         attempts:
           type: integer
