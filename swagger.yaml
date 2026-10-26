@@ -1,4 +1,4 @@
-openapi: "3.1.1"
+openapi: "3.2.1"
 info:
   description: |
     # Official documentation for the invo.space API.
@@ -3341,6 +3341,12 @@ paths:
       tags: [Storefront]
 
   /api/storefront/v1/products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     get:
       summary: Storefront product detail
       operationId: storefrontProductDetail
@@ -3453,6 +3459,12 @@ paths:
       tags: [Storefront]
 
   /api/storefront/v1/carts/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     get:
       summary: Get cart
       operationId: storefrontGetCart
@@ -3513,30 +3525,60 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   /api/storefront/v1/carts/{id}/customer:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     patch:
       summary: Set cart customer
       operationId: storefrontSetCartCustomer
       tags: [Storefront]
 
   /api/storefront/v1/carts/{id}/delivery:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     patch:
       summary: Set cart delivery
       operationId: storefrontSetCartDelivery
       tags: [Storefront]
 
   /api/storefront/v1/carts/{id}/payment:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     patch:
       summary: Set cart payment
       operationId: storefrontSetCartPayment
       tags: [Storefront]
 
   /api/storefront/v1/carts/{id}/promotion:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     post:
       summary: Promote cart to order
       operationId: storefrontPromoteCart
       tags: [Storefront]
 
   /api/storefront/v1/orders/{id}/card-payment:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
     post:
       summary: Initiate card payment
       operationId: storefrontCardPayment
@@ -4088,8 +4130,7 @@ components:
           type: string
           description: Description of the item
         skuId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Optional SKU reference for stock-tracked catalog items
         lineExtras:
           type: [array, 'null']
@@ -4144,8 +4185,7 @@ components:
           type: string
           description: Description of the item
         skuId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Optional SKU reference for stock-tracked catalog items
         lineExtras:
           type: [array, 'null']
@@ -4946,8 +4986,7 @@ components:
             - Card
             - Qr
         warehouseId:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Warehouse from which stock was deducted for this sale (wh_ prefixed KSUID). Defaults to the cash register settings warehouse when omitted.
         receiptLines:
           type: array
@@ -4983,8 +5022,7 @@ components:
         verificationMode:
           type: boolean
         idProvozovny:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         configured:
           type: boolean
         setupRequired:
@@ -5074,8 +5112,7 @@ components:
           type: string
           enum: [pending, confirmed, rejected, offline]
         fik:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Fiscal identification code (FIK) from EET
         datTrzby:
           type: string
@@ -5083,28 +5120,23 @@ components:
         celkTrzba:
           type: string
         sentAt:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
         receivedAt:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
         prvniZaslani:
           type: boolean
         attempts:
           type: integer
         errorCode:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         errorMessage:
-          type: string
-          nullable: true
+          type: [string, 'null']
         warnings:
-          type: array
+          type: [array, 'null']
           items:
             type: integer
-          nullable: true
 
     SummaryRow:
       type: object
@@ -6634,8 +6666,7 @@ components:
                   - Card
                   - Qr
               warehouseId:
-                type: string
-                nullable: true
+                type: [string, 'null']
                 description: Warehouse from which stock should be deducted (wh_ prefixed KSUID). When omitted, the cash register settings warehouse is used.
               receiptLines:
                 type: array
